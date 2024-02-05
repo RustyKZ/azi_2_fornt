@@ -2,6 +2,7 @@
   import axios from 'axios';
   import { serverUrl } from '../main';
   import { mapGetters } from 'vuex';
+  import { email_login } from '@/js/auth';
 
   export default {
     name: 'SignupPage',
@@ -37,7 +38,7 @@
           content: 'Modal content',
           button: 'Close'
         },
-        alertVisible: false,
+        modalVisible: false,
         successVisible: false,
 
       };
@@ -83,19 +84,24 @@
       async registerUser() {
         console.log('Register user function', this.user_reg);
         await this.getUsers();
+        if (this.allUsers) {
+          console.log('REGISTER USER: aalUsers is True')
+        } else {
+          console.log('REGISTER USER: aalUsers is False')
+        }
         const userExists = this.allUsers.some(user => user.nickname === this.user_reg.name);
         const emailExists = this.allUsers.some(user => user.email === this.user_reg.email);
         const passwordError = !(this.user_reg.password === this.user_reg.repassword);
-        const passwordShort = !(this.user_reg.password.length >= 5 && this.user_reg.password.length <= 50)
+        const passwordShort = !(this.user_reg.password.length >= 8 && this.user_reg.password.length <= 50)
         const nameError = !(this.user_reg.name.length >= 5 && this.user_reg.name.length <= 30)
         if (userExists) {
-          this.modalErrorName();
+          this.modalErrorNameExist();
         } else if (emailExists) {
-          this.modalErrorEmail();
+          this.modalErrorEmailExist();
         } else if (nameError) {
           this.modalErrorNameIncorrect();
         } else if (passwordError) {
-          this.modalErrorPassword();
+          this.modalErrorPasswordNotMatch();
         } else if (passwordShort) {
           this.modalErrorPasswordShort();
         } else {
@@ -103,10 +109,14 @@
             const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
             console.log('Register user', response);
             // Обработка успешного запроса, если нужно
-            this.scrollToTop();
-            this.successVisible = true;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            this.$router.push('/');
+            if (response.data['registred']) {
+              this.scrollToTop();
+              this.successVisible = true;
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              this.user_login.email = this.user_reg.email;
+              this.user_login.password = this.user_reg.password;
+              await email_login(this.user_login);
+            }            
           } catch (error) {
             if (error.response) {
               // Ошибка 4XX (клиентская ошибка)
@@ -129,76 +139,97 @@
 
       async registerGoogle() {
         console.log('Register Google function', this.user_reg);
-        const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
-        this.modalErrorServer();
-        console.log('Register user',response)
+        try {
+          const response = await axios.post(`${serverUrl}/api/user_login_google`, this.user_reg);
+          console.log('Register Google function user',response)
+        } catch (error) {
+            if (error.response) {
+              // Ошибка 4XX (клиентская ошибка)
+              console.error('Client error:', error.response.status);
+              this.modalErrorClient();
+            } else if (error.request) {
+              // Ошибка связанная с запросом (например, отсутствие ответа)
+              console.error('Request error:', error.request);
+              this.modalErrorClient();
+            } else {
+              // Ошибка при настройке запроса
+              console.error('Setup error:', error.message);
+              this.modalErrorClient();
+            }
+              // Обработка ошибок 5XX или других ошибок
+              console.log('Register Google function - ERROR')
+              this.modalErrorServer();
+          }
+        
+        // this.modalErrorServer();
+
       },
 
       async registerMetamask() {
         console.log('Register Metamask function', this.user_reg);
-        const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
+        //const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
         // this.modalErrorMetamask();
         this.scrollToTop();
         this.successVisible = true;
         await new Promise(resolve => setTimeout(resolve, 1000));
         this.$router.push('/');
-        console.log('Register user',response)
+        //console.log('Register user',response)
       },
 
       modalErrorClient() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_incorrect;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_client;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
       modalErrorServer() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_server;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_server;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
-      modalErrorName() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_name;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+      modalErrorNameExist() {
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_nameexist;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
-      modalErrorPassword() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_password;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+      modalErrorPasswordNotMatch() {
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_passwordnotmatch;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
       modalErrorPasswordShort() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_passwordshort;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_passwordshort;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
       modalErrorNameIncorrect() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_nameincorrect;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_nameincorrect;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
-      modalErrorEmail() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_email;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+      modalErrorEmailExist() {
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_emailexist;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
       modalErrorMetamask() {
-        this.alertModalData.title = this.formData.alert_title_error;
-        this.alertModalData.content = this.formData.alert_content_metamask;
-        this.alertModalData.button = this.formData.alert_button_close;
-        this.alertVisible = true;
+        this.alertModalData.title = this.formData.modal_title_error;
+        this.alertModalData.content = this.formData.modal_metamaskerror;
+        this.alertModalData.button = this.formData.modal_button_close;
+        this.modalVisible = true;
       },
 
       scrollToTop() {
@@ -221,7 +252,7 @@
 </script>
 
 <template>
-  <BModal v-model="alertVisible" id="alertModal" centered :title="alertModalData.title" :okTitle="alertModalData.button" okVariant="secondary" ok-only="true">
+  <BModal v-model="modalVisible" id="alertModal" centered :title="alertModalData.title" :okTitle="alertModalData.button" okVariant="secondary" ok-only="true">
     <p class="my-4">{{ alertModalData.content }}</p>
   </BModal>
   {{ allUsers }}
@@ -267,10 +298,10 @@
                 <div class="col-6">
                   <div class="text-end">
                     <span class="me-3">
-                      {{ formData.signup }}
+                      {{ formData.signup_with }}
                     </span>
-                    <img @click="registerGoogle" src="/images/3-google.png" :title="formData.google" class="bi me-3" width="36" height="36" style="cursor: pointer;">
-                    <img @click="registerMetamask" src="/images/3-metamask.png" :title="formData.metamask" class="bi" width="36" height="36" style="cursor: pointer;">
+                    <img @click="registerGoogle" src="/images/3-google.png" :title="formData.google_hint" class="bi me-3" width="36" height="36" style="cursor: pointer;">
+                    <img @click="registerMetamask" src="/images/3-metamask.png" :title="formData.metamask_hint" class="bi" width="36" height="36" style="cursor: pointer;">
                   </div>          
                 </div>
               </div>

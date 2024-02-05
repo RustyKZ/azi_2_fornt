@@ -7,6 +7,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home_Page from '../components/HomePage.vue'
 import AppSignup from '../components/AppSignup.vue'
 import AppLogin from '../components/AppLogin.vue'
+import OAuth_Google_Page from '../components/OAuthGoogle.vue'
+import Error_404_Page from '../components/404.vue'
+import Error_500_Page from '../components/500.vue'
 // import PlayerProfile from './components/PlayerProfile.vue'
 // import AccessDenied from './components/AccessDenied.vue'
 // import Play_Tables from './components/Play_Tables.vue'
@@ -32,6 +35,9 @@ const router = createRouter({
 //    { path: '/rules', component: Game_Rules },
 //    { path: '/toplist', component: Top_List },
     { path: '/about', component: About_Page },
+    { path: '/oauth_google/', component: OAuth_Google_Page },
+    { path: '/404', component: Error_404_Page },
+    { path: '/500', component: Error_500_Page },
 //    { path: '/donation', component: Donation_Page },
 
 //    { path: '/tables', component: Play_Tables, name: 'TablesPage', meta: { requiresAuth: true } },

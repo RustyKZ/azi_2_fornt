@@ -2,6 +2,8 @@
   import axios from 'axios';
   import { serverUrl } from '../main';
   import { mapGetters, mapActions } from 'vuex';
+  import { email_check_auth, email_logout } from '../js/auth'
+
 
   export default {
     name: 'AppHeader',
@@ -10,15 +12,17 @@
     data() {
       return {
         headerData: {},
+        isLoggedByEmail: {},
       };
     },
 
     created() {      
       this.fetchApiHeader(this.getCurrentLanguage);
+      email_check_auth();
     },
 
     computed: {
-      ...mapGetters(['getCurrentLanguage']),
+      ...mapGetters(['getCurrentLanguage', 'isAuthEmail', 'isAuthWeb3']),
     },
 
     methods: {
@@ -41,6 +45,10 @@
       goToHomePage() {
         this.$router.push('/');
       },
+      async goToToplistPage() {
+        this.$router.push('/');
+        this.isLoggedByEmail = await email_check_auth();
+      },
       goToAboutPage() {
         this.$router.push('/about');
       },
@@ -49,6 +57,10 @@
       },
       goToLoginPage() {
         this.$router.push('/login');
+      },
+      async goToLogout() {
+        await email_logout();
+        this.$router.push('/');
       },
 
     }
@@ -63,14 +75,14 @@
       <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
 
         <div class="d-flex align-items-center text-white text-decoration-none">
-          <img @click="goToHomePage" class="link_button mt-1 me-4" src="/images/logo.png" alt="AZI Online">
+          <img @click="goToHomePage" class="link_button mt-1 me-4" src="/images/logo.png" alt="AZI Online" style="cursor: pointer;">
         </div>
-
+        {{ isAuthEmail }} {{ isAuthWeb3 }}
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
           <li class="btn btn-success me-2">{{ headerData.play }}</li>
           <li class="nav-link px-2 text-white link_button">{{ headerData.rules }}</li>
-          <li class="nav-link px-2 text-white link_button">{{ headerData.top }}</li>
-          <li @click="goToAboutPage" class="nav-link px-2 text-white link_button">{{ headerData.about }}</li>
+          <li @click="goToToplistPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.top }}</li>
+          <li @click="goToAboutPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.about }}</li>
         </ul>
 
         <div class="text-end">
@@ -78,7 +90,7 @@
           <button type="button" class="btn btn-primary me-2">{{ headerData.table }} 1</button>          
           <button @click="goToSignupPage" type="button" class="btn btn-outline-light me-2">{{ headerData.signup }}</button>
           <button @click="goToLoginPage" type="button" class="btn btn-outline-light me-2">{{ headerData.login }}</button>
-          <button type="button" class="btn btn-outline-light me-2">{{ headerData.logout }}</button>
+          <button @click="goToLogout" type="button" class="btn btn-outline-light me-2">{{ headerData.logout }}</button>
           <!--
           <button type="button" class="btn btn-outline-warning">{{ headerData.wallet }}</button>
           <button type="button" class="btn btn-warning">WalletAddress</button>          
