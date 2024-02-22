@@ -39,8 +39,14 @@ export async function email_check_auth() {
     console.log('AUTH.JS email_check_auth ', response.data);
     if (response.data['is_auth']) {
       store.dispatch('changeStatusLoggedIn');
+      if (response.data['is_auth_web3']) {
+        store.dispatch('changeStatusWeb3In');
+      } else {
+        store.dispatch('changeStatusWeb3Out');
+      }
     } else {
       store.dispatch('changeStatusLoggedOut');
+      store.dispatch('changeStatusWeb3Out');
     }
     return response.data;
   } catch (error) {
@@ -70,6 +76,7 @@ export async function email_logout() {
     console.log('AUTH.JS email_logout ', response.data);
     if (response.data['logged_out']) {
       store.dispatch('changeStatusLoggedOut');
+      store.dispatch('changeStatusWeb3Out');
     }
     return response.data;
   } catch (error) {

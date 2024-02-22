@@ -1,20 +1,25 @@
 <script>
   import axios from 'axios';
   import { serverUrl } from '../main';
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { email_login } from '@/js/auth';
-
+  import { get_ip_address } from '@/js/ip_address.js';
+  import { walletConnect } from '../js/web3auth';
+  
   export default {
     name: 'SignupPage',
     props: ['signupArgument'],
 
     computed: {
-      ...mapGetters(['getCurrentLanguage']),
+      ...mapGetters(['getCurrentLanguage', 'isAuth', 'isAuthWeb3']),          
     },
 
     watch: {
-      getCurrentLanguage(newLanguage) {        
+      getCurrentLanguage(newLanguage) {
         this.update(newLanguage);
+      },
+      isAuth() {
+        this.goToAccessDenied();
       },
     },
 
@@ -28,6 +33,7 @@
           password: '',
           repassword: '',
           ref_code: '',
+          ip_address: '',
         },
         user_login:{
           email: '',
@@ -44,17 +50,28 @@
       };
     },
 
-    created() {      
+    created() {
+      console.log('APP SIGNUP isAuth is ', this.isAuth)
+      if (this.isAuth) {
+        this.$router.push('/accessdenied');
+      }
       this.fetchApiForm(this.getCurrentLanguage);
       this.refCodeChecking();      
     },
 
     methods: {
+      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError']),
       refCodeChecking() {
         if (this.signupArgument && this.signupArgument.startsWith('ref=')) {
           this.user_reg.ref_code = this.signupArgument.slice(4);
         } else {
           this.user_reg.ref_code = '';
+        }
+      },
+
+      goToAccessDenied() {
+        if (this.isAuth) {
+          this.$router.push('/access_denied');
         }
       },
 
@@ -93,7 +110,7 @@
         const emailExists = this.allUsers.some(user => user.email === this.user_reg.email);
         const passwordError = !(this.user_reg.password === this.user_reg.repassword);
         const passwordShort = !(this.user_reg.password.length >= 8 && this.user_reg.password.length <= 50)
-        const nameError = !(this.user_reg.name.length >= 5 && this.user_reg.name.length <= 30)
+        const nameError = !(this.user_reg.name.length >= 5 && this.user_reg.name.length <= 50)
         if (userExists) {
           this.modalErrorNameExist();
         } else if (emailExists) {
@@ -106,6 +123,7 @@
           this.modalErrorPasswordShort();
         } else {
           try {
+            this.user_reg.ip_address = await get_ip_address();
             const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
             console.log('Register user', response);
             // Обработка успешного запроса, если нужно
@@ -133,103 +151,91 @@
             }
               // Обработка ошибок 5XX или других ошибок
               this.modalErrorServer();
-          }          
+          }
         }
       },
-
-      async registerGoogle() {
-        console.log('Register Google function', this.user_reg);
-        try {
-          const response = await axios.post(`${serverUrl}/api/user_login_google`, this.user_reg);
-          console.log('Register Google function user',response)
-        } catch (error) {
-            if (error.response) {
-              // Ошибка 4XX (клиентская ошибка)
-              console.error('Client error:', error.response.status);
-              this.modalErrorClient();
-            } else if (error.request) {
-              // Ошибка связанная с запросом (например, отсутствие ответа)
-              console.error('Request error:', error.request);
-              this.modalErrorClient();
-            } else {
-              // Ошибка при настройке запроса
-              console.error('Setup error:', error.message);
-              this.modalErrorClient();
-            }
-              // Обработка ошибок 5XX или других ошибок
-              console.log('Register Google function - ERROR')
-              this.modalErrorServer();
-          }
-        
-        // this.modalErrorServer();
-
+      
+      googleAuth() {
+        // Google's OAuth 2.0 endpoint for requesting an access token
+        var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+        // Create <form> element to submit parameters to OAuth 2.0 endpoint.
+        var form = document.createElement('form');
+        form.setAttribute('method', 'GET'); // Send as a GET request.
+        form.setAttribute('action', oauth2Endpoint);
+        // Parameters to pass to OAuth 2.0 endpoint.
+        var params = {
+              'client_id': '746578585810-cl1hd0s6kvde9dqq4u39gbpb68mmrpib.apps.googleusercontent.com',
+              // 'redirect_uri': 'http://127.0.0.1:8000/api/user_login_google/',
+              'redirect_uri': 'http://localhost:8080/oauth_google/',
+              'response_type': 'token',
+              'scope': 'https://www.googleapis.com/auth/userinfo.email', //https://www.googleapis.com/auth/userinfo.profile 
+              'include_granted_scopes': 'true',
+              // 'state': 'pass-through value',
+              'state': this.user_reg.ref_code,
+        };
+        // Add form parameters as hidden input values.
+        for (var p in params) {
+          var input = document.createElement('input');
+          input.setAttribute('type', 'hidden');
+          input.setAttribute('name', p);
+          input.setAttribute('value', params[p]);
+          form.appendChild(input);
+        }
+        // Add form to page and submit it to open the OAuth 2.0 endpoint.
+        document.body.appendChild(form);
+        form.submit();
       },
 
       async registerMetamask() {
-        console.log('Register Metamask function', this.user_reg);
-        //const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
-        // this.modalErrorMetamask();
-        this.scrollToTop();
-        this.successVisible = true;
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        this.$router.push('/');
-        //console.log('Register user',response)
+        console.log('REGISTER METAMASK function', this.user_reg);
+        const walletStatus = await walletConnect(this.user_reg.ref_code);
+        console.log('REGISTER METAMASK response: ', walletStatus);
+        if (walletStatus.logged_in) {
+          console.log('METAMASK CONNECT ', walletStatus.logged_in)
+          this.$router.push('/');
+        } else {
+          this.setGlobalModalErrorOn();
+          try {
+            this.setGlobalError(walletStatus.error);
+          } catch {
+            this.setGlobalError(0);
+          }
+        }        
       },
 
-      modalErrorClient() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_client;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+      modalErrorClient() {        
+        this.setGlobalError(466);
+        this.setGlobalModalErrorOn();
       },
 
       modalErrorServer() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_server;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+        this.setGlobalError(465);
+        this.setGlobalModalErrorOn();
       },
 
       modalErrorNameExist() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_nameexist;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+        this.setGlobalError(460);
+        this.setGlobalModalErrorOn();
       },
 
       modalErrorPasswordNotMatch() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_passwordnotmatch;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+        this.setGlobalError(462);
+        this.setGlobalModalErrorOn();
       },
 
       modalErrorPasswordShort() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_passwordshort;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+        this.setGlobalError(463);
+        this.setGlobalModalErrorOn();
       },
 
       modalErrorNameIncorrect() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_nameincorrect;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+        this.setGlobalError(464);
+        this.setGlobalModalErrorOn();
       },
 
       modalErrorEmailExist() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_emailexist;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
-      },
-
-      modalErrorMetamask() {
-        this.alertModalData.title = this.formData.modal_title_error;
-        this.alertModalData.content = this.formData.modal_metamaskerror;
-        this.alertModalData.button = this.formData.modal_button_close;
-        this.modalVisible = true;
+        this.setGlobalError(461);
+        this.setGlobalModalErrorOn();
       },
 
       scrollToTop() {
@@ -255,7 +261,7 @@
   <BModal v-model="modalVisible" id="alertModal" centered :title="alertModalData.title" :okTitle="alertModalData.button" okVariant="secondary" ok-only="true">
     <p class="my-4">{{ alertModalData.content }}</p>
   </BModal>
-  {{ allUsers }}
+  
   <div class="container">    
     <div class="content">
       <div class="mainbox">
@@ -267,7 +273,7 @@
           <div class="bg-body-tertiary p-5 rounded">
             
             <h3>{{ formData.title }}</h3>
-            <hr>            
+            <hr>
 
             <form @submit.prevent="registerUser">
               <div class="form-floating mb-3">
@@ -300,7 +306,7 @@
                     <span class="me-3">
                       {{ formData.signup_with }}
                     </span>
-                    <img @click="registerGoogle" src="/images/3-google.png" :title="formData.google_hint" class="bi me-3" width="36" height="36" style="cursor: pointer;">
+                    <img @click="googleAuth" src="/images/3-google.png" :title="formData.google_hint" class="bi me-3" width="36" height="36" style="cursor: pointer;">
                     <img @click="registerMetamask" src="/images/3-metamask.png" :title="formData.metamask_hint" class="bi" width="36" height="36" style="cursor: pointer;">
                   </div>          
                 </div>

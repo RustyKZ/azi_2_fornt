@@ -12,7 +12,7 @@
     },
 
     watch: {
-      getCurrentLanguage(newLanguage) {      
+      getCurrentLanguage(newLanguage) {
         this.fetchApiFooter(newLanguage);
       },
     },

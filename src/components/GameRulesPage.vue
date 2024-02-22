@@ -3,7 +3,7 @@
   import { serverUrl } from '../main';
   import { mapGetters } from 'vuex';
   export default {
-    name: 'HomePage',
+    name: 'GameRulesPage',
 
     computed: {
       ...mapGetters(['getCurrentLanguage']),
@@ -17,7 +17,7 @@
 
     data() {
       return {
-        homepageData: {},
+        rulespageData: {},
         formData: {},
         articles: [],
         noContent: false,
@@ -28,57 +28,49 @@
 
     created() {
       this.fetchApiForm(this.getCurrentLanguage);
-      this.getHomepageData(this.getCurrentLanguage);
+      this.getRulespageData(this.getCurrentLanguage);
     },
 
     methods: {
       async fetchApiForm(languageId) {
         try {
-          const response = await axios.get(`${serverUrl}/api/get_homepage_form/${languageId}`);
+          const response = await axios.get(`${serverUrl}/api/get_rulespage_form/${languageId}`);
           this.formData = response.data;
           this.noContentMessage = this.formData[this.getCurrentLanguage-1].form.no_content;
           this.noContentHeader = this.formData[this.getCurrentLanguage-1].form.notice;
-          console.log('HOMEPAGE - FORM: ', this.formData);
+          console.log('GAMERULESPAGE - FORM: ', this.formData);
         } catch (error) {
-          console.error('HOMEPAGE - Error fetching API Form:', error);
+          console.error('GAMERULESPAGE - Error fetching API Form:', error);
         }
       },
 
-      async getHomepageData(languageId) {
+      async getRulespageData(languageId) {
         try {
-          const response = await axios.get(`${serverUrl}/api/get_homepage_data/${languageId}`);
-          this.homepageData = response.data;
-          if (this.homepageData.result) {
-            this.articles = JSON.parse(this.homepageData.articles);
-            console.log('HOMEPAGE - DATA: ', this.homepageData);
+          const response = await axios.get(`${serverUrl}/api/get_rulespage_data/${languageId}`);
+          this.rulespageData = response.data;
+          if (this.rulespageData.result) {
+            this.articles = JSON.parse(this.rulespageData.articles);
+            console.log('GAMERULESPAGE - DATA: ', this.rulespageData);
           } else {
             this.noContent = true;
-            console.log('HOMEPAGE - DATA: ', this.homepageData);
+            console.log('GAMERULESPAGE - DATA: ', this.rulespageData);
           }          
         } catch (error) {
           this.noContent = true;
-          console.error('HOMEPAGE - Error fetching API data:', error);
+          console.error('GAMERULESPAGE - Error fetching API data:', error);
         }
       },
 
       async update(newLanguage) {
         this.noContent = false;
         await this.fetchApiForm(newLanguage);
-        await this.getHomepageData(newLanguage);
+        await this.getRulespageData(newLanguage);
       },
 
       getArticleImage(imagePath) {
         return serverUrl + '/' + imagePath;
       },
 
-      formatDate(dateString) {    
-        const date = new Date(dateString);
-        const year = date.getFullYear();
-        const month = ('0' + (date.getMonth() + 1)).slice(-2); // Добавляем ноль перед однозначными месяцами
-        const day = ('0' + date.getDate()).slice(-2); // Добавляем ноль перед однозначными днями
-        const formattedDate = `${year}-${month}-${day}`;
-        return formattedDate;
-      }
     }
   }
 </script>
@@ -98,10 +90,9 @@
     <div v-else class="custom-container">
       <div v-for="article in articles" :key="article.pk">
         <h2 >{{ article.fields.title }}</h2>        
-        <img :src="getArticleImage(article.fields.image)" alt="Article Image" class="img-container rounded-3 mb-3 mt-1">
+        <img v-if="article.fields.image != null && article.fields.image !=''" :src="getArticleImage(article.fields.image)" alt="Article Image" class="img-container rounded-3 mb-3 mt-1">        
         <p style="text-align: justify"><b>{{ article.fields.subtitle }}</b></p>
         <p v-html="article.fields.text" style="text-align: justify;"></p>
-        <p><i>{{ formatDate(article.fields.publicdate) }}</i></p>
         <br>
       </div>
     </div>
