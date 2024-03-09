@@ -22,6 +22,10 @@
     },
     computed: {
       ...mapGetters(['globalModalError', 'isAuth', 'isAuthWeb3', 'globalErrorNumber', 'getCurrentLanguage', 'getUser']),
+      isTableRoute() {
+        const currentPath = this.$route.path;      
+        return currentPath.startsWith('/table/');
+      },
     },
     watch: {
       globalModalError() {
@@ -41,7 +45,7 @@
     },
 
     methods: {
-      ...mapActions(['setGlobalModalErrorOff', 'setGlobalError', 'setUser']),
+      ...mapActions(['setGlobalModalErrorOff', 'setGlobalError', 'setUser', 'setActiveTable']),
       async fetchApiLanguages() {
         try {
           const response = await axios.get(serverUrl+'/api/get_languages');
@@ -71,6 +75,7 @@
           active_table: userData['active_table'],
           wallet: userData['wallet']
         });
+          this.$store.commit('setActiveTable', userData['active_table']);
           console.log('APP VUE AFTER - GET CURRENT USER - user data: ', userData);
         } else {
           this.$store.commit('setUser', {
@@ -80,6 +85,7 @@
           active_table: 0,
           wallet: ''
         });
+          this.$store.commit('setActiveTable', 0);
         }
       },
       modalErrorOn() {
@@ -114,14 +120,14 @@
 </script>
 
 <template>
-  <div><AppHeader :languages="languagesData"/></div>
+  <div><AppHeader v-if="!isTableRoute" :languages="languagesData"/></div>
   <div class="main-content">    
     <BModal v-model="globalModalError" id="alertModal" centered :title="modalData.title" :okTitle="modalData.button" okVariant="secondary" ok-only="true" @hide="modalErrorOff">
       <p class="my-4">{{ modalData.content }}</p>
-    </BModal>    
-    <router-view :key="routeKey"></router-view>
+    </BModal>
+    <router-view ></router-view>
   </div>
-  <div><AppFooter/></div>
+  <div><AppFooter v-if="!isTableRoute" /></div>
 </template>
 
 

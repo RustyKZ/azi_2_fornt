@@ -34,6 +34,7 @@
           repassword: '',
           ref_code: '',
           ip_address: '',
+          language: 1
         },
         user_login:{
           email: '',
@@ -55,12 +56,12 @@
       if (this.isAuth) {
         this.$router.push('/accessdenied');
       }
-      this.fetchApiForm(this.getCurrentLanguage);
+      this.fetchApiForm(this.getCurrentLanguage);      
       this.refCodeChecking();      
     },
 
     methods: {
-      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError']),
+      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError', 'changeLanguage']),
       refCodeChecking() {
         if (this.signupArgument && this.signupArgument.startsWith('ref=')) {
           this.user_reg.ref_code = this.signupArgument.slice(4);
@@ -124,6 +125,7 @@
         } else {
           try {
             this.user_reg.ip_address = await get_ip_address();
+            this.user_reg.language = this.getCurrentLanguage;
             const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
             console.log('Register user', response);
             // Обработка успешного запроса, если нужно
@@ -134,6 +136,7 @@
               this.user_login.email = this.user_reg.email;
               this.user_login.password = this.user_reg.password;
               await email_login(this.user_login);
+              this.$router.push('/');
             }            
           } catch (error) {
             if (error.response) {
@@ -188,10 +191,11 @@
 
       async registerMetamask() {
         console.log('REGISTER METAMASK function', this.user_reg);
-        const walletStatus = await walletConnect(this.user_reg.ref_code);
+        const walletStatus = await walletConnect(this.user_reg.ref_code, this.getCurrentLanguage);
         console.log('REGISTER METAMASK response: ', walletStatus);
         if (walletStatus.logged_in) {
-          console.log('METAMASK CONNECT ', walletStatus.logged_in)
+          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          this.changeLanguage(walletStatus.user_language);
           this.$router.push('/');
         } else {
           this.setGlobalModalErrorOn();

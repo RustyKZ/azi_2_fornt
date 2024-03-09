@@ -12,8 +12,7 @@ import PlayerProfile from '../components/PlayerProfile.vue'
 import PlayerReview from '../components/PlayerReview.vue'
 import AccessDeniedPage from '../components/AccessDenied.vue'
 import TablesHall from '../components/TablesHall.vue'
-// import Playing_Table from './components/Playing_Table.vue'
-// import Not_Found from './components/Not_Found.vue'
+import PlayingTable from '../components/PlayingTable.vue'
 // import Create_Table from './components/CreateTable.vue'
 import GameRulesPage from '../components/GameRulesPage.vue'
 import TopListPage from '../components/TopListPage.vue'
@@ -37,9 +36,8 @@ const router = createRouter({
     { path: '/profile/:user_id', component: PlayerProfile, name: 'ProfilePage' },
     { path: '/review/:user_id/', component: PlayerReview, name: 'ReviewPage' },
 //    { path: '/donation', component: Donation_Page },
-    { path: '/tables', component: TablesHall, name: 'TablesHall' },
-    
-//    { path: '/table/:table_id', component: Playing_Table, name: 'PlayingTablePage' },
+    { path: '/tables', component: TablesHall, name: 'TablesHall' },    
+    { path: '/table/:table_id', component: PlayingTable, name: 'PlayingTablePage' },
    ],
   history: createWebHistory()
 })

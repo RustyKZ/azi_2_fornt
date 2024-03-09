@@ -3,9 +3,9 @@ import { userTokenContract } from '../main'
 import { serverUrl } from '../main'
 import axios from 'axios';
 import { get_ip_address } from './ip_address';
-import store from './store';
+import store from './storage';
 
-export async function walletConnect(refCode) {    
+export async function walletConnect(refCode, language) {    
     if (typeof window.ethereum !== 'undefined') {
         const web3 = new Web3(window.ethereum);
         try {
@@ -42,7 +42,8 @@ export async function walletConnect(refCode) {
                     tokenBalance: balance.toString(),
                     signature: signature,
                     ref_code: refCode,
-                    ip_address: ip_address
+                    ip_address: ip_address,
+                    language: language
                 };
                 console.log(dataToSend);
                 console.log(`WALLET CONNECT: Request for ${serverUrl}/api/user_login_metamask`, dataToSend)

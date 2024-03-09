@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { serverUrl } from '../main'
-import store from './store';
+import store from './storage';
 
 // Вход пользователя через email
 export async function email_login(login_user) {
@@ -71,7 +71,8 @@ export async function email_check_auth() {
 export async function email_logout() {
   try {
     const authToken = localStorage.getItem('authToken') || '';
-    const token_data = {'token': authToken};
+    const currentLanguage = store.getters.getCurrentLanguage || 1;
+    const token_data = {'token': authToken, 'language': currentLanguage};
     const response = await axios.post(`${serverUrl}/api/user_logout`, token_data);
     console.log('AUTH.JS email_logout ', response.data);
     if (response.data['logged_out']) {

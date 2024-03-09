@@ -182,12 +182,13 @@ export default {
     joinTableRequest(table_id, table_protected) {
       if (this.userData.active_table === 0 || this.userData.active_table === -1) {
         if (!table_protected) {
-          this.$socket.emit('join_table_outside', { user_id: this.userData.user_id, table_id: table_id, table_password: '' });
+          this.$socket.emit('join_table', { user_id: this.userData.user_id, table_id: table_id, table_password: '' });
           console.log('JOIN TABLE : user ', this.userData.user_id, ' table ', table_id)
         } else {          
           console.log('JOIN TABLE : need password - password is ', this.enteredTablePassword);
-          this.$socket.emit('join_table_outside', { user_id: this.userData.user_id, table_id: table_id, table_password: this.enteredTablePassword});
-          this.enteredTablePassword = '';          
+          this.$socket.emit('join_table', { user_id: this.userData.user_id, table_id: table_id, table_password: this.enteredTablePassword});
+          this.enteredTablePassword = '';
+          // Here sortedTables
           this.tables.forEach(table => {
             table.editing = false;
           });
@@ -291,11 +292,8 @@ export default {
                               <b v-if="table.blind_game"> {{ interfaceData.tc_blind_game_true }} </b>
                               <b v-else> {{ interfaceData.tc_blind_game_false }} </b>
                             </h6>
-                            <h6>{{ interfaceData.tc_cointype }} 
-                              <span v-if="table.cointype === 0" class="badge text-bg-secondary" style="cursor:default">{{ interfaceData.tc_array_coin[table.cointype] || ''}}</span>
-                              <span v-if="table.cointype === 1" class="badge text-bg-warning" style="cursor:default">{{ interfaceData.tc_array_coin[table.cointype] || ''}}</span>
-                              <span v-if="table.cointype === 2" class="badge text-bg-success" style="cursor:default">{{ interfaceData.tc_array_coin[table.cointype] || ''}}</span>
-                            </h6>
+                            <h6>{{ interfaceData.tc_cointype }} <b>{{ interfaceData.tc_array_coin[table.cointype] || ''
+                            }}</b></h6>
                             <h6>{{ interfaceData.tc_card_deck }} <b>{{ interfaceData.tc_array_deck[table.drop_suit] || ''
                             }}</b></h6>
                           </div>
@@ -321,7 +319,7 @@ export default {
                               <b v-if="(table.players[number] !== 0)" @click="goToProfilePage(table.players[number])"
                                 style="color: darkblue; cursor: pointer" :title="interfaceData.tc_hint_profile"> {{
                                   getTruncNickname(table.players[number]) }} </b>
-                              <div v-else> {{ interfaceData.tc_free_place }} </div>
+                              <t v-else> {{ interfaceData.tc_free_place }} </t>
                             </div>
                             <div v-if="(table.players[number] !== 0)"
                               class="col-3 d-flex justify-content-center align-items-center">
@@ -333,8 +331,7 @@ export default {
                             </div>
                           </div>
                         </div>
-                      </div>
-                      
+                      </div>                      
                     </div>                    
                     <!--Поле ввода пароля-->
                     <div v-if="table.protected && table.editing" class="row">

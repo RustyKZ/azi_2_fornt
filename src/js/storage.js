@@ -7,13 +7,14 @@ export default new Vuex.Store({
     authByWeb3: false,
     globalModalError: false,
     globalErrorNumber: 0,
+    currentActiveTable: parseInt(localStorage.getItem('currentActiveTable')) || 0,
     user: {
       id: 0,
       nickname: '',
       django_name: '',
       wallet: '',
       active_table: 0
-    },
+    },    
   },
   mutations: {
     setCurrentLanguage(state, newLanguage) {
@@ -43,6 +44,9 @@ export default new Vuex.Store({
     setUser(state, user) {
       state.user = user;
     },
+    setActiveTable(state, newActiveTable) {
+      state.currentActiveTable = newActiveTable;
+    }
 
   },
   actions: {
@@ -81,6 +85,10 @@ export default new Vuex.Store({
     setUser({ commit }, user) {
       commit('setUser', user);
     },
+    setActiveTable({ commit }, newActiveTable) {
+      localStorage.setItem('currentActiveTable', newActiveTable);
+      commit('setActiveTable', newActiveTable)
+    }
   },
   getters: {
     getCurrentLanguage: (state) => state.currentLanguage,
@@ -89,6 +97,7 @@ export default new Vuex.Store({
     globalModalError: (state) => state.globalModalError,
     globalErrorNumber: (state) => state.globalErrorNumber,
     getUser: (state) => state.user,
+    getActiveTable: (state) => state.currentActiveTable,
   },
 });
 

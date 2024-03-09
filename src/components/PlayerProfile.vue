@@ -45,14 +45,12 @@ export default {
       newPhone: '',
       country: 0,          
       states: []
-
       
     };
   },
 
   async created() {
-    const userData = await email_check_auth();
-    console.log('PLAYER PROFILE is Auth after: ', userData);
+    const userData = await email_check_auth();    
     if (!userData['is_auth']) {
       console.log('PLAYER PROFILE AccessDenied')
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
@@ -66,8 +64,7 @@ export default {
     async fetchApiForm() {
       this.userId = this.$route.params.user_id;
       try {        
-        const response = await axios.get(`${serverUrl}/api/get_user_profile_form`);
-        console.log('PROFILE PAGE GET PAGE :', response);
+        const response = await axios.get(`${serverUrl}/api/get_user_profile_form`);        
         try {
           if (response.data[this.getCurrentLanguage-1]['label']) {
             this.formData = response.data[this.getCurrentLanguage-1]['form'];
@@ -78,7 +75,7 @@ export default {
           this.states = response.data[0]['states'];
         }        
       } catch (error) {
-        console.error('Error fetching API data:', error);
+        console.error('PLAYER PROFILE - fetchApiForm Error:', error);
       }
     },
 
@@ -88,21 +85,19 @@ export default {
         const dataToSend = {
           'user_id': this.userId,
           'token': localStorage.getItem('authToken')
-        }
-        console.log('PROFILE PAGE GET USER DATA - query: ', dataToSend)
+        }        
         const response = await axios.post(`${serverUrl}/api/get_user_profile_data`, dataToSend);
-        this.user = response.data;
+        this.user = response.data;        
         this.country = this.user.country;
-        if (this.user.email.endsWith(serverMail)) {
-          console.log('EMAIL ADRESS ',this.user.email, ' included in the end the mailserver namne ', serverMail);
-          this.isEmailDefault = true;
-        } else {
-          console.log('EMAIL ADRESS ',this.user.email, ' NOT included in the end the mailserver namne ', serverMail);
-          this.isEmailDefault = false;
-        }
-        console.log('PROFILE PAGE GET USER DATA - response: ', response.data);
+        if (this.user.owner) {
+          if (this.user.email.endsWith(serverMail)) {            
+            this.isEmailDefault = true;
+          } else {            
+            this.isEmailDefault = false;
+          }
+        }        
       } catch (error) {
-        console.error('Error fetching API data:', error);
+        console.error('PLAYER PROFILE - getUserProfile Error:', error);
       }
     },
 
@@ -140,7 +135,7 @@ export default {
           console.log('CHANGE NICKNAME - response: ', response.data);
           if (response.data['result']) {
             await this.getUserProfile();
-            this.$store.commit('setUser', {              
+            this.$store.commit('setUser', {
               id: this.user.id,
               nickname: this.user.nickname,
               email: this.user.email,
@@ -182,7 +177,7 @@ export default {
           console.log('CHANGE EMAIL - response: ', response.data);
           if (response.data['result']) {
             await this.getUserProfile();
-            this.$store.commit('setUser', {              
+            this.$store.commit('setUser', {
               id: this.user.id,
               nickname: this.user.nickname,
               django_name: this.user.django_name,

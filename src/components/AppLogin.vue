@@ -41,7 +41,7 @@
     },
 
     methods: {
-      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError']),
+      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError', 'changeLanguage']),
       async fetchApiForm(languageId) {
         try {
           const response = await axios.get(`${serverUrl}/api/get_login_form/${languageId}`);
@@ -70,6 +70,7 @@
             this.user = this.login_status.user_id;
             console.log('LOGIN USER: user is ', this.user);
             console.log('LOGIN USER: response is ', this.login_status);
+            this.changeLanguage(this.login_status.user_language)
             if (this.login_status.logged_in) {
               this.$router.push('/');
             }
@@ -124,10 +125,11 @@
       },
       async loginMetamask() {
         console.log('LOGIN METAMASK function');
-        const walletStatus = await walletConnect('');
+        const walletStatus = await walletConnect('', this.getCurrentLanguage);
         console.log('LOGIN METAMASK response: ', walletStatus);
         if (walletStatus.logged_in) {
-          console.log('METAMASK CONNECT ', walletStatus.logged_in)
+          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          this.changeLanguage(walletStatus.user_language);
           this.$router.push('/');
         } else {
           this.setGlobalModalErrorOn();

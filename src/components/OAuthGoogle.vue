@@ -3,12 +3,18 @@
   import { serverUrl } from '../main';
   import { get_ip_address } from '@/js/ip_address.js';
   import { email_check_auth } from '../js/auth'
+  import { mapGetters, mapActions } from 'vuex';
+
   export default {
     name: 'OAuth_Google_Page',
     data() {
       return {
         authParams: {},
       };
+    },
+
+    computed: {
+      ...mapGetters(['getCurrentLanguage']),          
     },
 
     created() {
@@ -31,11 +37,13 @@
         access_token: accessToken,
         ref_code: refCode,
         ip_address: ipAddress,
+        language: this.getCurrentLanguage
       };
       await this.oauth_google_login(dataToSend);
     },
 
     methods: {
+      ...mapActions(['changeLanguage']),
       parseHashParams() {
         const hash = window.location.hash.substring(1);
         const params = hash.split('&');
@@ -52,10 +60,12 @@
           const response = await axios.post(`${serverUrl}/api/user_login_google`, data);
           console.log('OAuth Google login:', response);
           const djangoToken = response.data['access_token'] || '';
+          const language = response.data['user_language'] || 1;
           localStorage.setItem('authToken', djangoToken);          
           const logged_in = await email_check_auth();
           console.log('OAUTH GOOGLE LOGIN: logged_in is: ', logged_in)
           if (logged_in['is_auth']) {
+            this.changeLanguage(language);
             this.$router.push('/');
           }          
         } catch (error) {

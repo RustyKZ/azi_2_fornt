@@ -14,7 +14,8 @@
     data() {
       return {
         headerData: {},
-        metamaskIsHovered: false
+        metamaskIsHovered: false,
+        
       };
     },
 
@@ -27,7 +28,18 @@
     },
 
     computed: {
-      ...mapGetters(['getCurrentLanguage', 'isAuth', 'isAuthWeb3', 'globalModalError', 'getUser']),
+      ...mapGetters(['getCurrentLanguage', 'isAuth', 'isAuthWeb3', 'globalModalError', 'getUser', 'getActiveTable']),
+      userId() {
+        return this.getUser.id;
+      },
+      userActiveTable() {
+        return this.getActiveTable;
+      },
+    },
+
+    watch: {      
+      getUser() { }, 
+      getActiveTable() { },
     },
 
     methods: {
@@ -74,13 +86,16 @@
         await email_logout();
         this.$router.push('/');
       },
-
+      returnTable(table_id) {
+        this.$router.push(`/table/${table_id}`);
+      },
       async metamaskConnect() {
         console.log('METAMASCT CONNECT');
-        const walletStatus = await walletConnect('');
+        const walletStatus = await walletConnect('', this.getCurrentLanguage);
         console.log('METAMASK CONNECT response: ', walletStatus);
         if (walletStatus.logged_in) {
-          console.log('METAMASK CONNECT ', walletStatus.logged_in)
+          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          this.changeLanguage(walletStatus.user_language);
           this.$router.push('/');
         } else {
           this.setGlobalModalErrorOn();
@@ -116,11 +131,13 @@
   <header class="p-3 text-bg-dark">
     <div class="container">
       <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-
+        
         <div class="d-flex align-items-center text-white text-decoration-none">
           <img @click="goToHomePage" class="link_button mt-1 me-4" src="/images/logo.png" alt="AZI Online" style="cursor: pointer;">
-        </div>        
+        </div>
+        
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+
           <li @click="goToTablesPage" class="btn btn-success me-2">{{ headerData.play }}</li>
           <li @click="goToGameRulesPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.rules }}</li>
           <li @click="goToToplistPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.top }}</li>
@@ -129,7 +146,8 @@
 
         <div class="text-end">
           <button v-if="isAuth" type="button" @click="goToProfilePage" class="btn btn-outline-primary me-2">{{ getTruncNickname() }}</button>
-          <button v-if="isAuth && getUser.active_table != 0" type="button" class="btn btn-primary me-2">{{ headerData.table }} {{ getUser.active_table }}</button>
+          <button v-if="isAuth && userActiveTable > 0" @click="returnTable(userActiveTable)" type="button" class="btn btn-primary me-2">{{ headerData.table }} {{ userActiveTable }}</button>
+          <button v-if="isAuth && userActiveTable == -1" type="button" class="btn btn-primary me-2" style="cursor: default">{{ headerData.hall }}</button>
           <button v-if="!isAuth" @click="goToSignupPage" type="button" class="btn btn-outline-light me-2">{{ headerData.signup }}</button>
           <button v-if="!isAuth" @click="goToLoginPage" type="button" class="btn btn-outline-light me-2">{{ headerData.login }}</button>
           <button v-if="isAuth && !isAuthWeb3" @click="goToLogout" type="button" class="btn btn-outline-light me-2">{{ headerData.logout }}</button>

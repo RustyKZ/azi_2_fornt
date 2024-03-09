@@ -54,3 +54,30 @@ export function trunc_26(textString) {
     }
 }
 
+export function trunc_20(textString) {
+    try {                
+        if (textString.length > 20) {
+            return textString.slice(0, 13) + '...' + textString.slice(-4);
+        } else {
+            return textString;
+        }
+    }
+    catch {
+        console.error('truncatedNicknameText Error')
+        return ''; // Вернуть пустую строку или другое значение по умолчанию
+    }
+}
+
+export function trunc_24(textString) {
+    try {                
+        if (textString.length > 24) {
+            return textString.slice(0, 17) + '...' + textString.slice(-4);
+        } else {
+            return textString;
+        }
+    }
+    catch {
+        console.error('truncatedNicknameText Error')
+        return ''; // Вернуть пустую строку или другое значение по умолчанию
+    }
+}

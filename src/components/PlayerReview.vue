@@ -147,7 +147,7 @@ export default {
                 <h3><b> {{ userNickname }} </b> - {{ formData.title }}</h3>
               </div>
               <div class="col-md-2" >
-                <button @click="goToProfilePage(userId)" class="btn btn-outline-secondary btn-sm w-100">Return</button>
+                <button @click="goToProfilePage(userId)" class="btn btn-outline-secondary btn-sm w-100">{{ formData.button_return }}</button>
               </div>
             </div>       
             <hr>

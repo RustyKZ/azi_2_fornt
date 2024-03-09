@@ -26,10 +26,10 @@ export default {
     },
     props: {
         table: Object, // Объект таблицы
-        playerNames: Object, // Словарь имен игроков
-        playerReputation: Object, // Словарь репутации игроков
-        playerRating: Object, // Словарь рейтинга игроков
-        playerActiveTable: Number,
+        //playerNames: Object, // Словарь имен игроков
+        //playerReputation: Object, // Словарь репутации игроков
+        //playerRating: Object, // Словарь рейтинга игроков
+        //playerActiveTable: Number,
     },
     created() {
         this.thisUserID = Number(localStorage.getItem('user_id'));        
