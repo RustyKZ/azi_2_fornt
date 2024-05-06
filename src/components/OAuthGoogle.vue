@@ -9,6 +9,7 @@
     name: 'OAuth_Google_Page',
     data() {
       return {
+        user_id: 0,
         authParams: {},
       };
     },
@@ -43,7 +44,7 @@
     },
 
     methods: {
-      ...mapActions(['changeLanguage']),
+      ...mapActions(['changeLanguage', 'setGlobalModalErrorOn', 'setGlobalError', 'setGlobalErrorCustomText', 'setAirdropCoins', 'setReferalCoins']),
       parseHashParams() {
         const hash = window.location.hash.substring(1);
         const params = hash.split('&');
@@ -53,6 +54,32 @@
           parsedParams[key] = value;
         });
         this.authParams = parsedParams;
+      },
+
+      async getAirdropCoins() {
+        const dataToSend = {
+          'user_id': this.user_id,
+          'token': localStorage.getItem('authToken')
+        }
+        try {          
+          const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
+          console.log('APP LOGIN - GET AIRDROP COINS - response: ', response)
+          const dataResponse = response['data']          
+          if (dataResponse['status']) {            
+            this.setGlobalError(1001);
+            this.setAirdropCoins(dataResponse['airdrop']);
+            this.setReferalCoins(dataResponse['referal']);
+            this.setGlobalModalErrorOn();
+          } else {
+            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response)
+            //this.setGlobalError(dataResponse['error']);  
+            //this.setGlobalModalErrorOn();
+          }
+        } catch(error) {
+          console.error('Airdrop catch')
+          this.setGlobalError(0);
+          this.setGlobalModalErrorOn();
+        }        
       },
 
       async oauth_google_login(data) {
@@ -65,9 +92,13 @@
           const logged_in = await email_check_auth();
           console.log('OAUTH GOOGLE LOGIN: logged_in is: ', logged_in)
           if (logged_in['is_auth']) {
+            this.user_id = logged_in['user_id']
             this.changeLanguage(language);
+            await this.getAirdropCoins();
             this.$router.push('/');
-          }          
+          } else {
+            this.$router.push('/500');
+          }
         } catch (error) {
           if (error.response) {
             // Ошибка 4XX (клиентская ошибка)
@@ -78,8 +109,9 @@
           } else {
             // Ошибка при настройке запроса
             console.error('Setup error:', error.message);
-          }
-            // Обработка ошибок 5XX или других ошибок              
+          }          
+            // Обработка ошибок 5XX или других ошибок
+          this.$router.push('/500');
         }
       }
     }
@@ -90,6 +122,7 @@
 
 <template>
   <div>
+    <!--
     OAuth
     <hr>
     {{ authParams }}
@@ -100,7 +133,7 @@
     <div v-if="authParams.expires_in">
       Expires In: {{ authParams.expires_in }}
     </div>
-
+    -->
   </div>
 </template>
 

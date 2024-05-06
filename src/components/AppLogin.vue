@@ -1,9 +1,9 @@
 <script>
   import axios from 'axios';
-  import { serverUrl } from '../main';
+  import { serverUrl, clientUrl } from '../main';
   import { mapGetters, mapActions } from 'vuex';
   import { email_login } from '../js/auth';
-  import { walletConnect } from '@/js/web3auth';
+  import { walletConnect } from '@/js/web3auth';  
 
   export default {
     name: 'LoginPage',
@@ -27,7 +27,7 @@
     data() {
       return {
         formData: {},
-        user: {},
+        user: 0,
         user_login: {
           email: '',
           password: '',
@@ -41,7 +41,7 @@
     },
 
     methods: {
-      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError', 'changeLanguage']),
+      ...mapActions(['setGlobalModalErrorOn', 'setGlobalError', 'changeLanguage', 'setGlobalErrorCustomText', 'setAirdropCoins', 'setReferalCoins']),
       async fetchApiForm(languageId) {
         try {
           const response = await axios.get(`${serverUrl}/api/get_login_form/${languageId}`);
@@ -59,6 +59,33 @@
         await this.fetchApiForm(newLanguage);
       },
 
+      async getAirdropCoins() {
+        const dataToSend = {
+          'user_id': this.user,
+          'token': localStorage.getItem('authToken')
+        }
+        try {
+          console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend)
+          const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
+          const dataResponse = response['data']
+          if (dataResponse['status']) {
+            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            this.setGlobalError(1001);
+            this.setAirdropCoins(dataResponse['airdrop']);
+            this.setReferalCoins(dataResponse['referal']);
+            this.setGlobalModalErrorOn();
+          } else {
+            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            //this.setGlobalError(dataResponse['error']);  
+            //this.setGlobalModalErrorOn();
+          }
+        } catch(error) {
+          console.error('Airdrop catch')
+          this.setGlobalError(0);
+          this.setGlobalModalErrorOn();
+        }
+      },
+
       async loginUser() {
         if (this.user_login.email === '' || !(this.user_login.password.length >= 8 && this.user_login.password.length <= 50)) {
           this.modalErrorIncorrect();
@@ -72,6 +99,7 @@
             console.log('LOGIN USER: response is ', this.login_status);
             this.changeLanguage(this.login_status.user_language)
             if (this.login_status.logged_in) {
+              await this.getAirdropCoins();
               this.$router.push('/');
             }
           }
@@ -105,7 +133,7 @@
         var params = {
               'client_id': '746578585810-cl1hd0s6kvde9dqq4u39gbpb68mmrpib.apps.googleusercontent.com',
               // 'redirect_uri': 'http://127.0.0.1:8000/api/user_login_google/',
-              'redirect_uri': 'http://localhost:8080/oauth_google/',
+              'redirect_uri': `${clientUrl}/oauth_google/`,
               'response_type': 'token',
               'scope': 'https://www.googleapis.com/auth/userinfo.email', //https://www.googleapis.com/auth/userinfo.profile 
               'include_granted_scopes': 'true',
@@ -123,13 +151,16 @@
         document.body.appendChild(form);
         form.submit();
       },
+
       async loginMetamask() {
         console.log('LOGIN METAMASK function');
         const walletStatus = await walletConnect('', this.getCurrentLanguage);
         console.log('LOGIN METAMASK response: ', walletStatus);
         if (walletStatus.logged_in) {
-          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          this.user = walletStatus.user_id;
+          console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
           this.changeLanguage(walletStatus.user_language);
+          await this.getAirdropCoins();
           this.$router.push('/');
         } else {
           this.setGlobalModalErrorOn();

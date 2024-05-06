@@ -3,7 +3,7 @@ import axios from 'axios';
 import { serverUrl } from '../main';
 import { mapGetters, mapActions } from 'vuex';
 import { email_check_auth } from '@/js/auth';
-import { trunc_24, trunc_20, trunc_9_4 } from '../js/supply'
+import { trunc_20, trunc_9_4 } from '../js/supply'
 
 
 export default {
@@ -14,7 +14,10 @@ components: {
 },
 
 computed: {
-    ...mapGetters(['getCurrentLanguage', 'isAuth', 'isAuthWeb3', 'globalModalError', 'getUser', 'getActiveTable']),
+    ...mapGetters(['getCurrentLanguage', 'isAuth', 'isAuthWeb3', 'globalModalError', 'getUser', 'getActiveTable', 'globalErrorNumber']),
+    isRivalsQuantityEven() {
+            return this.rivalsQuantity % 2 === 0;
+        },
 
 },
 
@@ -86,14 +89,15 @@ data() {
         dropsuit: ['/images/192-spades.png','/images/192-clubs.png','/images/192-diamonds.png','/images/192-hearts.png'],
         all_users: [{"id": 0, "nickname": ""}],
         playerIndex: null,
+        myCardsUnknown: true,
         myCards: [
-                {pos: 1, card: 2, name: 'myCard1', image: '/images/cards/220-cads-deck27.png', type: 'card', opacity: 'opacity: 100%'},
-                {pos: 2, card: 3, name: 'myCard2', image: '/images/cards/220-cads-deck03.png', type: 'card', opacity: 'opacity: 100%'},
-                {pos: 3, card: 1, name: 'myCard3', image: '/images/cards/220-cads-deck01.png', type: 'card', opacity: 'opacity: 100%'},
-                {pos: 4, card: 36, name: 'myCard4', image: '/images/cards/220-cads-deck36.png', type: 'card', opacity: 'opacity: 100%'},
+                {pos: 0, card: 0, name: 'myCard1', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                {pos: 1, card: 0, name: 'myCard2', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                {pos: 2, card: 0, name: 'myCard3', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                {pos: 3, card: 0, name: 'myCard4', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
             ],
         cardImagePath:[
-                '/images/cards/220_cads_shirt.png',
+                '/images/cards/220-cads_shirt.png',
                 '/images/cards/220-cads-deck01.png', 
                 '/images/cards/220-cads-deck02.png', 
                 '/images/cards/220-cads-deck03.png', 
@@ -139,16 +143,32 @@ data() {
         progressBarRunning: false,
         defaultActionRequestSent: false,
         timer: null,
-        rivalsQuantity: 5,
-        rivals: [   {"id": 1, "nickname": "FirstRival"},
-                    {"id": 1, "nickname": "FirstRival"},
-                    {"id": 1, "nickname": "FirstRival"},
-                    {"id": 1, "nickname": "FirstRival"},
-                    {"id": 1, "nickname": "FirstRival"},
-            ],
+        rivalsQuantity: 0,
+        rivals: [ {"id": 0, "nickname": "", "index": 0}, {"id": 0, "nickname": "", "index": 1}, {"id": 0, "nickname": "", "index": 2}, {"id": 0, "nickname": "", "index": 3}, {"id": 0, "nickname": "", "index": 4}, {"id": 0, "nickname": "", "index": 5} ],
         rivalsWidth: ['width: 100%', 'width: 30%', 'width: 50%', 'width: 75%', 'width: 100%', 'width: 100%' ],
         coins: [0, 0, 0, 0, 0, 0],
         playerIsAlone: true,
+        //# 0 - ожидание
+        //# 1 - готов к игре
+        //# 2 - сделана стартовая ставка Ante
+        //# 3 - окончены торги и сброшена карта
+        //# 4 - сделан 1-й ход
+        //# 5 - сделан 2-й ход
+        //# 6 - сделан 3-й ход
+        //# 7 - в Ази
+        //# 8 - вырезан из Ази
+        //# 9 - Вкупился в Ази
+        //# 10- Отказался от Ази
+        //# 11- Упал 
+        //# 12- Нет монет для игры
+        statusColor: ['Grey','Indigo','Indigo','Indigo','Indigo','Indigo','Indigo','Indigo','Grey','Indigo','#ffc107','#ffc107','Brown'],
+        showCard: false,
+        cardImgSrc: '/images/cards/220-cads_shirt.png',
+        cardImg: null,
+        card_place: [0, 0, 0, 0, 0, 0],
+        card_place1: [0, 0, 0, 0, 0, 0],
+        card_place2: [0, 0, 0, 0, 0, 0],
+        card_place3: [0, 0, 0, 0, 0, 0],
     };
 },
 
@@ -157,7 +177,7 @@ async created() {
     this.userData = getUserData;
     this.tableId = parseInt(this.$route.params.table_id);
     this.userId = this.userData.user_id;
-    if (!this.userData['is_auth']) {        
+    if (!this.userData['is_auth']) {
         this.goToAccessDenied();
     }    
     await this.getInterface();
@@ -171,17 +191,33 @@ async created() {
         active_table: this.userData.active_table,
         wallet: this.userData.wallet
     });
-    this.startProgressBar();
+    this.startProgressBar();    
     this.$socket.emit('join_table_inside', { user_id: this.userData.user_id, table_id: this.tableId });
+    console.log('CREATED: Image ', this.cardImg)
 },
 
 async mounted() {
     console.log('GAME TABLE MOUNTED');
+    //const img = new Image();
+    // Устанавливаем путь к изображению
+    //img.src = this.cardImgSrc;
+    // Устанавливаем изображение в переменную cardImg после его загрузки
+    //img.onload = () => {
+    //    this.cardImg = img;
+    //    console.log('Mounted: ONload Image ', this.cardImg)
+    //};
+    this.cardImg = this.$refs.card_shirt;
     this.$socket.on('update_table_data', (data) => {
         this.updateTableData(data);
     });
+    this.$socket.on('update_table_data_cards', (data) => {
+        this.updateTableDataCards(data);
+    });
     this.$socket.on('get_private_notice', (data) => {
         this.getPrivateNotice(data);
+    });
+    this.$socket.on('get_my_cards', (data) => {
+        this.updateUserCards(data);
     });
 },
 
@@ -196,7 +232,7 @@ beforeUnmount () {
 },
 
 methods: {
-    ...mapActions(['setGlobalModalErrorOn', 'setGlobalError']),
+    ...mapActions(['setGlobalModalErrorOff', 'setGlobalModalErrorOn', 'setGlobalError']),
 
     async getInterface() {
       this.userId = this.$route.params.user_id;
@@ -244,10 +280,15 @@ methods: {
     },
 
     leaveTable() {        
-        this.$socket.emit('leave_table', { user_id: this.userData.user_id, table_id: this.tableId });        
+        this.$socket.emit('leave_table', { user_id: this.userData.user_id, table_id: this.tableId });
         console.log('PLAYING TABLE - LEAVE TABLE');
-        this.stopProgressBar();
-        this.$router.push(`/tables`);
+    },
+
+    updateTableDataCards(data) {
+        if (data.status) {            
+            this.dealCard(data.index)
+            this.game = data.game;
+        }
     },
 
     updateTableData(data) {
@@ -257,27 +298,123 @@ methods: {
             this.playerIndex = this.table.players.indexOf(this.userData.user_id);
             this.coins = data.coins;
             this.defaultActionRequestSent = false;
-            this.checkPlayerIsAlone();            
+            this.checkPlayerIsAlone();
+            this.updateRivals();
+
+            if (this.game.id !== 0) {
+                //this.updateRivals();
+                if (this.game.stage === 1 || this.game.stage === 0 || this.game.stage >= 9) {
+                    this.myCards = [
+                        {pos: 0, card: 0, name: 'myCard1', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                        {pos: 1, card: 0, name: 'myCard2', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                        {pos: 2, card: 0, name: 'myCard3', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                        {pos: 3, card: 0, name: 'myCard4', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
+                    ]
+                } else {
+                    console.log('')
+                    // this.$socket.emit('get_my_cards', { user_id: this.userData.user_id, game_id: this.game.id });
+                }
+            }
+            if (data.turn_player_index !== null && data.turn_player_index !== undefined && data.turn_player_index !== this.playerIndex && data.turn_player_index >= 0 && data.turn_player_index <=5) {                
+                    const card_place_json = {
+                        '0': this.game.card_place, 
+                        '1': this.game.card_place1, 
+                        '2': this.game.card_place2, 
+                        '3': this.game.card_place3, 
+                        }
+                    this.rivalTurn(data.turn_player_index, card_place_json);
+            } else {
+                this.card_place = this.game.card_place;
+                this.card_place1 = this.game.card_place1;
+                this.card_place2= this.game.card_place2;
+                this.card_place3 = this.game.card_place3;                
+            }
+            if (this.playerIndex === -1) {
+                this.stopProgressBar();
+                this.$router.push(`/tables`);
+            }
         } else {
             this.setGlobalError(data.error);
             this.setGlobalModalErrorOn();
-        }        
-        console.log('UPDATE TABLE DATA: ', data);
+        }
+    },
+
+    updateRivals() {
+        // console.log('CREATE RIVALS ', this.table.players, this.table.max_players, this.getUser.id)
+        const rivals = [];
+        let rivalsQuantity = 0;
+
+        const maxPlayers = this.table.max_players;
+        const currentUserID = this.getUser.id;
+        const players = this.table.players.slice(0, maxPlayers);
+        const nicknames = this.table.players_nicknames.slice(0, maxPlayers);
+        // Находим индекс текущего пользователя
+        const currentUserIndex = players.findIndex(id => id === currentUserID);
+        // Начиная с элемента, следующего за текущим пользователем, добавляем соперников в массив
+        for (let i = 0; i < maxPlayers; i++) {
+            let idx = (currentUserIndex + 1 + i) % maxPlayers;
+            if (players[idx] !== 0 && players[idx] !== currentUserID) {
+                const rival = {
+                    id: players[idx],
+                    nickname: nicknames[idx],
+                    index: idx
+                };
+                rivals.push(rival);
+                rivalsQuantity++;
+            }
+        }
+        this.rivals = rivals;
+        this.rivalsQuantity = rivalsQuantity;
     },
 
     getPrivateNotice(data) {
         if (data.status) {
-            this.setGlobalError(data.error);
-            this.setGlobalModalErrorOn();
-            console.log('GET PRIVATE NOTICE - DATA: ', data);
+            if (data.error === 800) { //#Quit from the table by def leave_table
+                this.stopProgressBar();
+                this.$router.push(`/tables`);
+            } else {
+                if (data.error !== 708) {
+                    this.setGlobalError(data.error);
+                    this.setGlobalModalErrorOn();
+                    console.log('GET PRIVATE NOTICE - DATA: ', data)
+                }
+                if (data.error === 712) {
+                    this.stopProgressBar();
+                    this.$router.push(`/tables`);
+                }
+                if (data.error >= 721 && data.error <= 723) {
+                    this.setGlobalModalErrorOff();
+                    this.setGlobalError(data.error);
+                    this.setGlobalModalErrorOn();
+                }
+            }
         } else {
             console.log('GET PRIVATE NOTICE - DATA: ', data);
         }
     },
 
+    updateUserCards(data) {
+        if (!data.status) {
+            if (data.error !== 708) {
+                this.setGlobalError(data.error);
+                this.setGlobalModalErrorOn();
+                console.log('UPDATE USER CARDS - DATA: ', data);
+            }            
+        } else {
+            const myCardsArray = data.cards
+            for (let n = 0; n < 4; n++) {
+                const card = myCardsArray[n];                
+                const strCard = card < 10 ? '0' + card : '' + card;
+                this.myCards[n].card = card // Присваиваем ключу card значение myCards[n]
+                this.myCards[n].image = '/images/cards/220-cads-deck' + strCard + '.png'; // Присваиваем ключу image значение '/images/cards/220-cads-deck{strCard}.png'
+            }
+            console.log('UPDATE USER CARDS - DATA: ', myCardsArray);
+        }
+    },
+
     getTruncNickname(user_nickname) {
         try {
-            return trunc_24(user_nickname)
+            return trunc_20(user_nickname)
         } catch {
             return ''
         }
@@ -300,7 +437,14 @@ methods: {
     },
 
     textNumber(number) {
-        if (typeof number !== 'number') {                
+        if (typeof number !== 'number') {
+            return '';
+        }
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    },
+
+    textValue(number) {
+        if (typeof number !== 'number' || number === 0) {
             return '';
         }
         return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -318,7 +462,7 @@ methods: {
     // Начало перетаскивания
         event.dataTransfer.setData('text/plain', JSON.stringify(item));
         console.log('CARD DRAGGED:', item);
-        this.myCards[item.pos-1]['opacity'] = 'opacity: 20%';
+        this.myCards[item.pos]['opacity'] = 'opacity: 50%';
     },
     cancelDrag(event) {
         event.preventDefault();
@@ -327,6 +471,7 @@ methods: {
             card.opacity = 'opacity: 100%';
         });
     },
+
     dropCard(event) {
         event.preventDefault();
         try {
@@ -340,47 +485,116 @@ methods: {
                     card_value: item.card
                 }
                 console.log('DROP CARD: ', droppedCard);
-                this.myCards[droppedCard.card_pos - 1].card = 0
+                if (this.game.stage < 5) {
+                    this.setGlobalError(713);
+                    this.setGlobalModalErrorOn();
+                }
+                const emptyCards = this.myCards.filter(item => item.card === 0);
+                console.log('EMPTY CARDS IS ', emptyCards.length);
+                if (this.game.stage === 5) {
+                    if (emptyCards.length > 0) {
+                        this.setGlobalError(714);
+                        this.setGlobalModalErrorOn();
+                    } else {
+                        this.$socket.emit('user_drop_card', { user_id: this.userData.user_id, game_id: this.game.id, card_pos: droppedCard.card_pos });
+                        // this.myCards[droppedCard.card_pos].card = 0
+                    }
+                } else if (this.game.stage === 6) {
+                    if (emptyCards.length > 1) {
+                        this.setGlobalError(715);
+                        this.setGlobalModalErrorOn();
+                    }
+                    if (this.game.speaker !== this.playerIndex) {
+                        this.setGlobalError(716);
+                        this.setGlobalModalErrorOn();
+                    }
+                    if (emptyCards.length === 1 && this.game.speaker === this.playerIndex) {
+                        this.$socket.emit('game_turn_1', { user_id: this.userData.user_id, game_id: this.game.id, card_pos: droppedCard.card_pos });
+                    }
+                } else if (this.game.stage === 7) {
+                    if (emptyCards.length > 2) {
+                        this.setGlobalError(715);
+                        this.setGlobalModalErrorOn();
+                    }
+                    if (this.game.speaker !== this.playerIndex) {
+                        this.setGlobalError(716);
+                        this.setGlobalModalErrorOn();
+                    }
+                    if (emptyCards.length === 2 && this.game.speaker === this.playerIndex) {
+                        this.$socket.emit('game_turn_2', { user_id: this.userData.user_id, game_id: this.game.id, card_pos: droppedCard.card_pos });
+                    }
+                } else if (this.game.stage === 8) {                    
+                    if (this.game.speaker !== this.playerIndex) {
+                        this.setGlobalError(716);
+                        this.setGlobalModalErrorOn();
+                    }
+                    if (emptyCards.length === 3 && this.game.speaker === this.playerIndex) {
+                        this.$socket.emit('game_turn_3', { user_id: this.userData.user_id, game_id: this.game.id, card_pos: droppedCard.card_pos });
+                    }
+                }                
             }
         } catch (error) {   
             console.log('CARD INVALID DROPPED:');
         }
     },
 
-    bettingRaise(bet) {
-        console.log('BETTING BET: bet is ', bet)
+    bettingRaise(raise_bet) {
+        console.log('BETTING RAISE: bet is ', raise_bet);
+        let int_bet = parseInt(raise_bet, 10);
+        if (isNaN(int_bet)) {
+            int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
+        }
+        this.$socket.emit('user_raise', { user_id: this.userData.user_id, table_id: this.tableId, raise_bet: int_bet });
+        console.log('BETTING RAISE: bet is ', int_bet)
     },
 
     bettingBet(bet) {
         console.log('BETTING BET: bet is ', bet)
+        let int_bet = parseInt(bet, 10);
+        if (isNaN(int_bet)) {
+            int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
+        }        
+        this.$socket.emit('user_bet', { user_id: this.userData.user_id, table_id: this.tableId, bet: int_bet });
+        console.log('BETTING BLIND BET: bet is ', int_bet)
     },
 
     bettingCall() {
-        console.log('BETTING CALL')
+        console.log('BETTING call')        
+        this.$socket.emit('user_call', { user_id: this.userData.user_id, table_id: this.tableId});
     },
 
     bettingFold() {
-        console.log('BETTING CALL')
+        console.log('BETTING FOLD')
+        this.$socket.emit('user_fold', { user_id: this.userData.user_id, table_id: this.tableId});
     },
 
     bettingCheck() {
-        console.log('BETTING CALL')
+        console.log('BETTING CHECK');
+        this.$socket.emit('user_check', { user_id: this.userData.user_id, table_id: this.tableId});
     },
 
     bettingBlind(bet) {
-        console.log('BETTING BET: bet is ', bet)
+        let int_bet = parseInt(bet, 10);
+        if (isNaN(int_bet)) {
+            int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
+        }        
+        this.$socket.emit('user_blind_bet', { user_id: this.userData.user_id, table_id: this.tableId, blind_bet: int_bet });
+        console.log('BETTING BLIND BET: bet is ', int_bet)
     },
 
     bettingBlindCheck() {
-        console.log('BETTING CALL')
+        this.$socket.emit('user_blind_check', { user_id: this.userData.user_id, table_id: this.tableId });
+        console.log('BETTING BLIND CHECK')
     },
 
     bettingAziHalfPot() {
-        console.log('BETTING CALL')
+        this.$socket.emit('user_azi_burst', { user_id: this.userData.user_id, game_id: this.game.id });
+        console.log('BETTING AZI HALF POT')
     },
 
     bettingAziDecline() {
-        console.log('BETTING CALL')
+        this.$socket.emit('user_azi_refuse', { user_id: this.userData.user_id, game_id: this.game.id });
+        console.log('BETTING AZI DECLINE')
     },
 
     readyForNewGame() {
@@ -391,7 +605,7 @@ methods: {
     startProgressBar() {
         if (!this.progressBarRunning) {
             this.timer = setInterval(() => {
-                console.log('PROGRESSBAR STARTED, timer is', this.timer, '  time elapsed ', this.progressElapsed)
+                // console.log('PROGRESSBAR STARTED, timer is', this.timer, '  time elapsed ', this.progressElapsed)
                 // Рассчитываем, сколько времени прошло с момента lastdeal до текущего момента
                 const currentTime = Math.floor(new Date().getTime() / 1000); // Текущее время в секундах
                 if (this.table.lastdeal !== 0) {
@@ -427,7 +641,7 @@ methods: {
         console.log('DEFAULT ACTION')
         if (!this.defaultActionRequestSent) {
             this.defaultActionRequestSent = true;
-            this.$socket.emit('default_action', { user_id: this.userData.user_id, table_id: this.tableId });            
+            this.$socket.emit('default_action', { user_id: this.userData.user_id, table_id: this.tableId });
         }
         
     },
@@ -438,11 +652,11 @@ methods: {
     },
 
     checkPlayerIsAlone() {
-        console.log('CHECK PLAYER IS ALONE', this.table.players, this.table.status, this.table.max_players)
+        // console.log('CHECK PLAYER IS ALONE', this.table.players, this.table.status, this.table.max_players)
         try {
             const arrayPlayers = this.table['players'].slice(0, this.table.max_players);
             const arrayStatus = this.table['status'].slice(0, this.table.max_players);
-            console.log('CHECK PLAYER IS ALONE - TRY')
+            // console.log('CHECK PLAYER IS ALONE - TRY')
             if (arrayPlayers.filter(item => item === 0).length + arrayStatus.filter(item => item === 12).length === this.table.max_players - 1) {
                 this.playerIsAlone = true;
             } else {
@@ -451,10 +665,122 @@ methods: {
         } catch {
             console.log('CHECK PLAYER IS ALONE - CATCH')
             this.playerIsAlone = true;
-        }        
+        }
+    },
+
+    testFunction() {
+        //if (this.game.stage !== 0) {
+        //    this.$socket.emit('test_function', { table_id: this.tableId });
+        //}
+        this.rivalTurn(1);
         
-        
+    },
+
+    calculateMargin(arrayIndex,index) {
+            let margin = 0;
+            for (let i = 0; i < index; i++) {
+                if ( arrayIndex == 1) {
+                    if (this.game.card_place1[i] !== 0) {
+                        margin += 15;
+                    }
+                }
+                if (arrayIndex == 2) {
+                    if (this.game.card_place2[i] !== 0) {
+                        margin += 15;
+                    }
+                }
+                if (arrayIndex == 3) {
+                    if (this.game.card_place3[i] !== 0) {
+                        margin += 15;
+                    }
+                }
+            }
+            return `${margin}px`;
+        },
+    
+    dealCard(dealIndex) {
+        try {
+        // Получаем элементы DOM
+        const card = this.$refs.card_shirt;
+        // console.log('DEAL CARD start: ', card)
+        if (card != null) {
+            // console.log('DEAL CARD INSIDE: ', card)
+            const deck = document.getElementById('deck');
+            const destination = document.getElementById('destination_' + dealIndex);
+            // Устанавливаем начальное положение карты над колодой
+            card.style.height = '15vh';
+            card.style.opacity = '1';
+            card.style.display = 'block';
+            card.style.left = deck.offsetLeft + 'px';
+            card.style.top = deck.offsetTop + 'px';
+            // Анимируем перемещение карты к месту назначения
+            const destinationLeft = destination.offsetLeft;
+            const destinationTop = destination.offsetTop;
+            const animation = card.animate(
+                [
+                    { transform: `translate(0px, 0px)` },
+                    { transform: `translate(${destinationLeft - deck.offsetLeft}px, ${destinationTop - deck.offsetTop}px)` }
+                ],
+                { duration: 200, easing: 'ease-in-out'}
+            );
+            // По завершению анимации скрываем карту
+            animation.onfinish = () => {
+                card.style.opacity = '0';
+                // console.log('DEAL CARD - ANIMATION')
+            }
+        } else {
+            // console.log('DEAL CARD - ANIMATION ERROR')
+        }
+        } catch {
+            console.error('Deal card - Animation error...')
+        }
+    },
+
+    rivalTurn(index, card_place_json) {
+        try {
+            const card = this.$refs.card_shirt;
+            const deck = document.getElementById('rivalplace_' + index);
+            const destination = document.getElementById('tableplace_' + index);            
+            if (card != null && deck != null && destination != null) {                
+                // Устанавливаем начальное положение карты над колодой
+                card.style.height = '15vh';
+                card.style.opacity = '1';
+                card.style.display = 'block';
+                card.style.left = deck.offsetLeft + 'px';
+                card.style.top = deck.offsetTop + 'px';
+                // Анимируем перемещение карты к месту назначения
+                const destinationLeft = destination.offsetLeft;
+                const destinationTop = destination.offsetTop;
+                const animation = card.animate(
+                    [
+                        { transform: `translate(0px, 0px)` },
+                        { transform: `translate(${destinationLeft - deck.offsetLeft}px, ${destinationTop - deck.offsetTop}px)` }
+                    ],
+                    { duration: 300, easing: 'ease-in-out'}
+                );
+                // По завершению анимации скрываем карту
+                animation.onfinish = () => {
+                    card.style.opacity = '0';
+                    this.card_place = card_place_json['0'];
+                    this.card_place1 = card_place_json['1'];
+                    this.card_place2 = card_place_json['2'];
+                    this.card_place3 = card_place_json['3'];
+                }
+            } else {
+                this.card_place = card_place_json['0'];
+                this.card_place1 = card_place_json['1'];
+                this.card_place2 = card_place_json['2'];
+                this.card_place3 = card_place_json['3'];
+            }
+        } catch (error) {
+            console.error('RIVAL TURN ERROR', error)
+            this.card_place = card_place_json['0'];
+            this.card_place1 = card_place_json['1'];
+            this.card_place2 = card_place_json['2'];
+            this.card_place3 = card_place_json['3'];
+        }
     }
+
   }
 }
 
@@ -462,119 +788,270 @@ methods: {
 
 <template>
     <div class="container-fluid" style="background: silver">        
-        <div class="row" style="height: 100%;">
-            <!--  Левый игровой блок-->
+        <div class="row" style="height: 96%;">
+            <!--  Левый игровой блок-->            
             <div class="col-9" style="height: 100%">
                 <div style="height: 100%; margin-left: 10px;">
-
                     <!-- Верхняя панель - карты и информация соперников -->
-                    <div class="row align-items-center justify-content-center" style="height: 25%;">
-                        {{ game }} {{ table }} {{ playerIndex }} {{ coins }} {{ timer }} {{ playerIsAlone }}
+                    <div class="row align-items-center justify-content-center" style="height: 25%;">                        
                         <div v-if="game.status" class="container-fluid" style="height: 100%" :style="rivalsWidth[rivalsQuantity]">
-                            <!-- Верхний ряд 1/3 - Имена соперников -->
-                            <div class="row align-items-center, main mt-2" style="height: 15%;" >
-                                <div v-for="rival in rivals" :key="rival.id" class="col align-items-center">
-                                    <div class="align-items-center">
-                                        <div v-if="game.speaker_id === rival.id" @click="goToPlayerProfile(rival.id)" class="main rounded-3" style="background: blue; cursor: pointer; text-align: center; vertical-align: middle">
-                                            <b style="color: white"> {{ getTruncNickname20(rival.nickname) }}</b>
-                                        </div>
-                                        <div v-else @click="goToPlayerProfile(rival)" class="main rounded-5" style="background: green; cursor: pointer; text-align: center; vertical-align: middle">
-                                            <b style="color: white"> {{ getTruncNickname20(rival.nickname) }}</b>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Верхний ряд 2/3 - Карты соперников -->
-                            <div class="row align-items-center, main" style="height: 55%;">
-                                <div v-for="rival in rivals" :key="rival.id" class="col align-items-center">
-                                    <div class="row">
-                                        <div class="col-1"></div>
-                                        <div class="col-10">
-                                            <img class="my-1" :src="cardRivalImagePath[4]" style="height: 13vh; margin-left: 0px; position: absolute;" :draggable="false">                                        
-                                        </div>                                    
-                                        <div class="col-1"></div>
-                                    </div>
-                                </div>  
-                            </div>
-                            <!-- Верхний ряд 3/3 - Реплики соперников/прогрессбар -->
-                            <div  class="row align-items-center mb-2" style="height: 25%;">
-                                <div v-for="rival in this.rivals" :key="rival.id" class="col align-items-center">                                
-                                    <div class="row" style="height:100%">
-                                        <div class="col-10">
-                                            <div class="d-flex align-items-center rounded-3 mb-1 w-100" style="height:90%; background:white; white-space: pre-line;">
-                                                <h6 class="ms-3 mt-1" style="color: black">{{ game.usersays[game.players.indexOf(rival)] }}</h6>
+                            <div class="row align-items-center, main mt-1" style="height: 100%;" >
+                                <div v-for="rival in rivals" :key="rival.id" class="col align-items-center" style="height: 100%;">                                    
+                                    <div class="p-1 rounded-4" style="height: 74%;" :style="{'background': table.players.indexOf(rival.id) === game.speaker ? 'RoyalBlue' : ''}">
+                                        <!-- Верхний ряд 1/3 - Имена соперников -->
+                                        <div class="align-items-center" style="height: 25%;">                                            
+                                            <div @click="goToPlayerProfile(rival)" class="main rounded-5" :style="{ background: statusColor[table.status[rival.index]] }" style="cursor: pointer; text-align: center; vertical-align: middle">
+                                                {{ rival.index }} <b style="color: white"> {{ getTruncNickname20(rival.nickname) }}</b>
                                             </div>
                                         </div>
-                                        <div class="col-2" :title="interfaceData.hint_attacker" >
-                                            <h3 class="" style="cursor: default;"><b>A</b></h3>
+                                        <!-- Верхний ряд 2/3 - Карты соперников -->
+                                        <div :id="'destination_' + rival.index" v-if="(game.stage >= 3 && game.stage <= 9)" class="row align-items-center, main" style="height: 75%;">
+                                            <div class="col-2 align-items-center justify-content-center d-flex">
+                                                <div v-if="game.players.indexOf(rival.id) === game.current_hodor && game.stage >=3 && game.current_hodor != -1" :title="interfaceData.hint_attacker">
+                                                    <h3 class="" style="cursor: default;"><b>A</b></h3>
+                                                </div>
+                                            </div>
+                                            <div :id="'rivalplace_' + rival.index" class="col-8 align-items-center justify-content-center">
+                                                <img v-if="game.card_players[rival.index] === 0" class="my-1" :src="cardRivalImagePath[0]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
+                                                <img v-if="game.card_players[rival.index] === 1" class="my-1" :src="cardRivalImagePath[1]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
+                                                <img v-if="game.card_players[rival.index] === 2" class="my-1" :src="cardRivalImagePath[2]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
+                                                <img v-if="game.card_players[rival.index] === 3" class="my-1" :src="cardRivalImagePath[3]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
+                                                <img v-if="game.card_players[rival.index] === 4" class="pb-1" :src="cardRivalImagePath[4]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
+                                            </div>
+                                            <div class="col-2"></div>
                                         </div>
-                                    </div>                                
-                                <!--
-                                    <div>
-                                        <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">                                            
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
-                                        </div>
-                                    </div>
-                                -->
-                                </div>
-                            </div>                            
-                        </div>
-                    </div>
 
+                                        <div v-if="game.stage === 12 && game.winner === table.players.indexOf(rival.id)" class="row align-items-center, main rounded-4" style="height: 75%; background: forestgreen;">
+                                            <div class="align-items-center justify-content-center" style="height: 30%;"><h6 class="text-center align-middle mt-2" style="color: aliceblue;">{{ interfaceData.badge_game }}<b>{{ game.id }}</b></h6></div>
+                                            <div class="align-items-center justify-content-center" style="height: 30%;"><h4 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_winner }}</b></h4></div>
+                                            <div class="align-items-center justify-content-center" style="height: 30%;"><h6 class="text-center align-middle" style="color: aliceblue;">{{ interfaceData.badge_pot }}<b>{{ textNumber(this.game.pot) }}</b></h6></div>
+                                        </div>
+                                        
+                                        <div v-if="(game.stage === 10 && table.status[game.players.indexOf(rival.id)] === 7)" class="row align-items-center, main rounded-4" style="height: 75%;">
+                                            <div class="d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue">
+                                                <div class="align-items-center justify-content-center"><h4 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_in }}</b></h4></div>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="(game.stage === 10 && table.status[game.players.indexOf(rival.id)] === 8)" class="row align-items-center, main rounded-4" style="height: 75%;">
+                                            <div class="d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: slategray">
+                                                <div class="align-items-center justify-content-center"><h4 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_out }}</b></h4></div>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="(game.stage === 10 && table.status[game.players.indexOf(rival.id)] === 9)" class="row align-items-center, main rounded-4" style="height: 75%;">
+                                            <div class="d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: slateblue">
+                                                <div class="align-items-center justify-content-center"><h4 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_burst }}</b></h4></div>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="(game.stage === 10 && table.status[game.players.indexOf(rival.id)] === 10)" class="row align-items-center, main rounded-4" style="height: 75%;">
+                                            <div class="d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: #ffc107">
+                                                <div class="align-items-center justify-content-center"><h4 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_refuse }}</b></h4></div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div style="height: 26%;">
+                                    <!-- Верхний ряд 3/3 - Реплики соперников/прогрессбар -->
+                                    
+                                        <div v-if="table.players.indexOf(rival.id) !== game.speaker &&
+                                            !(game.stage === 5 && table.status[rival.index] === 2) &&
+                                            !(game.stage === 12 && table.status[rival.index] === 0) &&
+                                            !(game.stage === 0 && table.status[rival.index] === 0) &&
+                                            !(game.stage === 10 && (table.status[rival.index] === 8 || table.status[rival.index] === 11))
+                                            " class="row align-items-center" style="height:100%">
+                                            <div>
+                                                <div v-if="game.usersays[rival.index] !== 0 && game.usersays[rival.index] !== undefined && table.status[rival.index] > 1" class="d-flex align-items-center rounded-3 mb-1 w-100" style="height:80%; background:white; white-space: pre-line;">
+                                                    <h6 class="ms-3 mt-1" style="color: black">{{ interfaceData.usersays[game.usersays[rival.index]] }} {{ textValue(game.usersays_value[rival.index]) }}</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div v-if="(table.players.indexOf(rival.id) === game.speaker && !(game.stage === 5 && table.status[rival.index] === 3)) || 
+                                            (game.stage === 12 && table.status[rival.index] === 0) || 
+                                            (game.stage === 0 && table.status[rival.index] === 0) ||
+                                            (game.stage === 5 && table.status[rival.index] === 2) ||
+                                            (game.stage === 10 && (table.status[rival.index] === 8 || table.status[rival.index] === 11))
+                                            " class="align-items-center my-3">
+                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100" :title="interfaceData.hint_timeout">                                            
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Если game.status == False -->
+                        <div v-if="!game.status && rivalsQuantity > 0" class="container-fluid" style="height: 100%" :style="rivalsWidth[rivalsQuantity]">                            
+                            <div class="row align-items-center, main mt-1" style="height: 100%;" >
+                                
+                                <div v-for="rival in rivals" :key="rival.id" class="col align-items-center" style="height: 100%;">                                    
+                                    <div class="p-1 rounded-4" style="height: 74%;">                                        
+                                        <div class="align-items-center" style="height: 25%;">                                            
+                                            <div @click="goToPlayerProfile(rival)" class="main rounded-5" :style="{ background: statusColor[table.status[rival.index]] }" style="cursor: pointer; text-align: center; vertical-align: middle">
+                                                {{ rival.index }} <b style="color: white"> {{ getTruncNickname20(rival.nickname) }}</b>
+                                            </div>
+                                        </div>                                        
+                                        <div class="row align-items-center, main" style="height: 75%;">                                            
+                                        </div>                                        
+                                    </div>
+
+                                    <div style="height: 26%;">                                                                           
+                                        <div v-if="table.status[rival.index] === 0" class="align-items-center my-3">
+                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100" :title="interfaceData.hint_timeout">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
+                                            </div>
+                                        </div>                                        
+                                    </div>
+                                </div>
+                                 
+                            </div>                           
+                        </div>
+
+                    </div>
                     <!-- Средняя панель - игровой стол -->
                     <div class="row align-items-center, main" style="height: 57%;">
-                        <div class="green-table" @dragenter.prevent="dragEnter" @dragover.prevent="dragOver" @drop="dropCard">                            
-                            <div class="row mt-2" style="height: 96%; ">
+                        
+                        <div class="green-table" @dragenter.prevent="dragEnter" @dragover.prevent="dragOver" @drop="dropCard">
+                            <div class="row" style="height: 96%; ">
+                                
                                 <!-- Левая часть стола - кон -->
                                 <div class="col-1 align-items-center justify-content-center text-center">
                                     <div class="row" style="height: 40%"></div>
                                     <div class="row" style="height: 20%;">
-                                        <b class="text-center" style="color: white;">POT:</b>
+                                        <b class="text-center" style="color: white;">{{ interfaceData.desk_pot }}</b>
                                         <br>
-                                        <b style="color: white;">10,000</b>
+                                        <b v-if="game.id !== 0 && game.stage !== 12" style="color: white;">{{ textNumber(game.pot) }}</b>
                                     </div>
                                     <div class="row" style="height: 20%"></div>
                                 </div>
                                 <!-- Центральная часть стола - место для карт  -->
-                                <div class="col-10 row align-items-center justify-content-center">
-                                    <div class="col" style="height: 100%"></div>
-                                    <div class="col" style="height: 100%"></div>
-                                    <div class="col" style="height: 100%"></div>
-                                    <div class="col" style="height: 100%"></div>
-                                    <div class="col" style="height: 100%"></div>
-                                </div>
-                                <!-- Правая часть стола - козырь -->
-                                <div class="col-1 align-items-center justify-content-center">
-                                    <div class="row align-items-start text-center" style="height: 33%;">
+                                <div v-if="game.status" class="col-10" style="height: 100%;">
+                                    <!--Взятки соперника-->
+                                    <div class="row" style="height: 25%; opacity: 60%;">
+                                        <div class="container-fluid" style="height: 100%" :style="rivalsWidth[rivalsQuantity]">
+                                            <div class="row align-items-center, main mt-1" style="height: 100%;" >
+                                            <div v-for="rival in this.rivals" :key="rival.id" class="col align-items-center">
+                                                
+                                                <div class="row" style="background: 1300">                                                
+                                                    <div v-if="(rival.index == game.turn1win)" class="col-1">                                         
+                                                        <template v-for="(card, index) in card_place1">
+                                                            <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(1,index), position: 'absolute' }">
+                                                        </template>
+                                                    </div>
+                                                    <div v-if="(rival.index == game.turn2win)" class="col-1" style="margin-top: 35px">                                                    
+                                                        <template v-for="(card, index) in card_place2">
+                                                            <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(2,index), position: 'absolute' }">
+                                                        </template>
+                                                    </div>
+                                                    <div v-if="(rival.index == game.turn3win)" class="col-1" style="margin-top: 70px">
+                                                        <template v-for="(card, index) in card_place3">
+                                                            <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(3,index), position: 'absolute' }">
+                                                        </template>
+                                                    </div>
+                                                    <div class="col-9">
+                                                    </div>
+                                                </div>
+
+                                                </div>
+                                            </div>
+                                        </div> 
                                     </div>
-                                    <div class="row" style="height: 34%;">                                        
-                                        <div class="container">                                            
-                                            <img class="" src="/images/cards/220-card_shirt.png" style="height: 15vh; position: absolute;">
-                                            <img class="m-2" src="/images/cards/220-card_shirt.png" style="height: 15vh; position: absolute;">
-                                            <img class="m-3" :src="cardImagePath[13]" style="height: 15vh; position: absolute;">
+                                    <!--Ходы соперника и пользвоателя -->
+                                    <div class="row" style="height: 50%">
+                                        <div class="container-fluid" style="height: 100%" :style="rivalsWidth[rivalsQuantity]">
+                                            <div class="" style="height: 100%">
+                                                <!--Ходы соперника  -->
+                                                <div class="row" style="height: 50%">                                        
+                                                    <div v-for="rival in this.rivals" :key="rival.id" class="col" >
+                                                        <div :id="'tableplace_' + rival.index">
+                                                            <img v-if="(card_place[rival.index] != 0)" class="my-1" :src="cardImagePath[card_place[rival.index]]" style="height: 15vh; position: absolute;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--Ходы пользователя  -->
+                                                <div class="row" style="height: 50%">
+                                                    <div class="row" style="height: 50%; place-items: center;">
+                                                        <div class="col-5">
+                                                        </div>
+                                                        <div class="col-1">
+                                                            <div v-if="isRivalsQuantityEven" style="position: relative;">
+                                                                <img v-if= "(card_place[playerIndex] != 0)" class="my-1" :src="cardImagePath[card_place[playerIndex]]" style="height: 15vh; position: absolute; top: 0; right: 0;">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-1">
+                                                            <div v-if="!isRivalsQuantityEven" style="position: relative;">
+                                                                <img v-if= "(card_place[playerIndex] != 0)" class="my-1" :src="cardImagePath[card_place[playerIndex]]" style="height: 15vh; position: absolute; top: 0; right: 0;">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-5">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--Взятки пользователя-->
+                                    <div class="row" style="height: 25%; opacity: 60%;">
+                                        <div v-if="playerIndex == game.turn1win" class="col-2" style="position: relative;">
+                                            <template v-for="(card, index) in card_place1">
+                                                <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(1,index), position: 'absolute',bottom: 0, left: 0}">
+                                            </template>
+                                        </div>
+                                        <div v-if="playerIndex == game.turn2win" class="col-2" style="position: relative;">
+                                            <template v-for="(card, index) in card_place2">
+                                                <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(2,index), position: 'absolute', bottom: 0, left: 0}">
+                                            </template>
+                                        </div>
+                                        <div v-if="playerIndex == game.turn3win" class="col-2" style="position: relative;">
+                                            <template v-for="(card, index) in card_place3">
+                                                <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(3,index), position: 'absolute', bottom: 0, left: 0}">
+                                            </template>
                                         </div>
 
+                                        <div class="col-6 d-flex align-items-center justify-content-center">                                        
+                                        
+                                        </div>
                                     </div>
-                                    <div class="row align-items-start text-center" style="height: 33%">
-                                        <h6 style="color: LimeGreen"><b>TRUMP</b></h6>
+                                        
+                                </div>
+                                <div v-if="!game.status" class="col-10" style="height: 100%;"></div>
+                                <!-- Правая часть стола - козырь -->
+                                <div class="col-1">
+                                    <div class="row align-items-start text-center" style="height: 30%;">
+                                    </div>
+                                    <div class="row align-items-start" style="height: 35%;">
+                                        <div id="deck" class="align-items-start p-1">
+                                            <img v-if="game.stage >= 2" class="" :src="cardImagePath[0]" style="height: 15vh; position: absolute;">                                        
+                                            <img v-if="game.stage >= 2" class="m-2" :src="cardImagePath[0]" style="height: 15vh; position: absolute;">
+                                            <img ref="card_shirt" class="m-2" :src="cardImagePath[0]" style="height: 15vh; position: absolute; opacity: 0;">
+                                            <img v-if="game.trump_value !== 0" class="m-3" :src="cardImagePath[game.trump_value]" style="height: 15vh; position: absolute;">
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-start text-center" style="height: 35%">
+                                        <h6 style="color: LimeGreen"><b>{{ interfaceData.desk_trump }}</b></h6>
                                     </div>
                                 </div>
                             </div>                            
                         </div>
                     </div>
-
                     <!-- Панель управления пользователя -->
                     <div class="row align-items-end" style="height: 18%; cursor: default;">
                         <!--  1 колонка панели - информация пользователя -->
                         <div class="col" style="display: grid; place-items: center; height:100%;">
                             <div class="container" style="margin:0; padding:0; height:100%">
                                 <!-- uID и никнейм пользователя -->
-                                <div class="row align-items-start" style="height: 30%">
+                                <div class="row align-items-start mt-1" style="height: 30%">
                                     <div class="col-4 align-self-center">
                                         <div style="color: black"><h5>uID: <b> {{ getUser.id }} </b></h5></div>
                                     </div>
-                                    <div class="col-8 align-self-center">                                        
-                                        <div class="d-flex justify-content-center align-items-center rounded-5" style="background: blue">
+                                    <div class="col-8 align-self-center">                                                                                
+                                        <div v-if="game.id !==0 && playerIndex !== null" class="d-flex justify-content-center align-items-center rounded-5" :style="{ background: statusColor[table.status[playerIndex]] }">
                                             <h5 style="color: white">{{ getTruncNickname20(getUser.nickname) }}</h5>
                                         </div>
                                     </div>
@@ -584,8 +1061,8 @@ methods: {
                                     <div class="col-7 align-self-center justify-content-center align-items-center">
                                         <div class="textcenter" style="color: black">
                                             <h5 v-if="table.cointype === 0">{{ interfaceData.balance[0] }}</h5>
-                                            <h5 v-if="table.cointype === 1">{{ interfaceData.balance[0] }}</h5>
-                                            <h5 v-if="table.cointype === 2">{{ interfaceData.balance[0] }}</h5>                                            
+                                            <h5 v-if="table.cointype === 1">{{ interfaceData.balance[1] }}</h5>
+                                            <h5 v-if="table.cointype === 2">{{ interfaceData.balance[2] }}</h5>
                                         </div>
                                     </div>
                                     <div v-if="playerIndex !== null" class="col-5 align-self-center justify-content-center align-items-center">                                        
@@ -595,13 +1072,13 @@ methods: {
                                     </div>
                                 </div>
                                 <!--   Слово пользователя-->        
-                                <div class="row align-items-end" style="; height: 35%">
+                                <div class="row align-items-end" style="height: 35%">
                                     <div class="col-10 align-self-center">
-                                        <div class="d-flex justify-content-center align-items-center rounded-3" style="background:Honeydew">
-                                            <h5 style="color: black">Usersays</h5>
+                                        <div v-if="game.status && game.id !== 0 && game.usersays[playerIndex] !== 0 && game.usersays[playerIndex] !== undefined && table.status[playerIndex] > 1" class="d-flex justify-content-center align-items-center rounded-3" style="background:Honeydew">
+                                            <h5  style="color: black">{{ interfaceData.usersays[game.usersays[playerIndex]] }} {{ textValue(game.usersays_value[playerIndex]) }}</h5>
                                         </div>
                                     </div>
-                                    <div class="col-2 justify-content-center align-items-center" :title="interfaceData.hint_attacker">
+                                    <div v-if="game.current_hodor === playerIndex" class="col-2 justify-content-center align-items-center" :title="interfaceData.hint_attacker">
                                         <div><h3 class="text-center align-middle" style="cursor: default;"><b>A</b></h3></div>
                                     </div>
                                 </div>
@@ -610,8 +1087,22 @@ methods: {
                         </div>
 
                         <!--  2 колонка панели - карты пользователя-->
-                        <div class="col" style="display: grid; place-items: center; height:100%;">
-                            <div v-if="1==2" class="row pt-1" style="height:100%; overflow: hidden;">
+                        <div :id="'destination_' + playerIndex" class="col" style="display: grid; place-items: center; height:100%;">
+                            <div v-if="game.stage === 3 && game.card_players[playerIndex] !==0" class="row pt-1" style="height:100%; overflow: hidden;">
+                                <div v-for="card_shirt in game.card_players[playerIndex]" :key="card_shirt" class="col" style="padding: 0; margin:0; height:100%">
+                                    <div class="col" style="padding: 0; margin:0; height: 100%;">
+                                        <img :src="cardImagePath[0]" class="draggable-item">
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="game.stage === 4" class="row pt-1" style="height:100%; overflow: hidden;">
+                                <div v-for="item in myCards" :key="item.pos" class="col" style="padding: 0; margin:0; height:100%">
+                                    <div class="col" v-if="(item.card !=0)" style="padding: 0; margin:0; height: 100%;">
+                                        <img :src="item.image" :alt="item.name" class="draggable-item" :draggable="false" style="cursor: default;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="game.stage >= 5 && game.stage <= 9" class="row pt-1" style="height:100%; overflow: hidden;">
                                 <div v-for="item in myCards" :key="item.pos" class="col" style="padding: 0; margin:0; height:100%">
                                     <div class="col" v-if="(item.card !=0)" style="padding: 0; margin:0; height: 100%;">
                                         <img :src="item.image" :alt="item.name" class="draggable-item" :draggable="true" @dragend="cancelDrag" @dragstart="startDrag($event, item)" :style="item.opacity">
@@ -620,21 +1111,21 @@ methods: {
                             </div>
                             <!--  Не карты пользователя -->
 
-                            <div v-if="1==1" class="container-fluid rounded-4" style="background: ForestGreen; height: 90%;">
+                            <div v-if="game.stage === 12 && game.winner === playerIndex" class="container-fluid rounded-4" style="background: ForestGreen; height: 90%;">
                                 <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle mt-2" style="color: aliceblue;">{{ interfaceData.badge_game }}<b>{{ game.id }}</b></h5></div>
                                 <div class="row align-items-center justify-content-center" style="height: 30%;"><h2 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_winner }}</b></h2></div>
-                                <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle" style="color: aliceblue;">{{ interfaceData.badge_pot }}<b>{{ textNumber(this.game.pot) }}</b></h5></div>                                        
+                                <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle" style="color: aliceblue;">{{ interfaceData.badge_pot }}<b>{{ textNumber(this.game.pot) }}</b></h5></div>
                             </div>
-                            <div v-if="1==2" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
+                            <div v-if="game.stage === 10 && table.status[playerIndex] === 7" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
                                 <div class="align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_in }}</b></h3></div>
                             </div>
-                            <div v-if="1==2" class="col-10 d-flex justify-content-center col align-items-center rounded-4 mt-2" style="background: SlateGray; height: 10vh;">
+                            <div v-if="game.stage === 10 && table.status[playerIndex] === 8" class="col-10 d-flex justify-content-center col align-items-center rounded-4 mt-2" style="background: SlateGray; height: 10vh;">
                                 <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_out }}</b></h3></div>
                             </div>
-                            <div v-if="1==2" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
+                            <div v-if="game.stage === 10 && table.status[playerIndex] === 9" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
                                 <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_burst }}</b></h3></div>
                             </div>
-                            <div v-if="1==2" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: #ffc107; height: 10vh;">
+                            <div v-if="game.stage === 10 && table.status[playerIndex] === 10" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: #ffc107; height: 10vh;">
                                 <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>{{ interfaceData.badge_azi_refuse }}</b></h3></div>
                             </div>
 
@@ -642,15 +1133,20 @@ methods: {
 
                         <!--  3 колонка панели - прогрессбар  и кнопки -->
                         <div class="col" style="margin:0; padding: 0; display: grid; place-items: center; height: 100%;">
-                            
-                                
+
                                 <div class="container-flex" style="height: 100%; width: 100%;">
                                      <!-- 1/3 строка 3 колонки нижнего ряда - прогрессбар времени пользователя   -->
                                      <div class="row align-items-center justify-content-center" style="height: 20%;">
                                         
-                                        <div class="justify-content-center" style="width: 80%">
-                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
-                                                <div class="progress-bar progress-bar-striped progress-bar-animated" :title="interfaceData.hint_timeout" :style="{ width: progressWidth }">{{ table.interval - progressElapsed }}</div>
+                                        <div v-if="rivalsQuantity !== 0 &&
+                                            (game.speaker === playerIndex || 
+                                            (game.stage === 12 && table.status[playerIndex] === 0) || 
+                                            (game.stage === 0 && table.status[playerIndex] === 0) ||
+                                            (game.stage === 5 && table.status[playerIndex] === 2) ||
+                                            (game.stage === 10 && (table.status[playerIndex] === 8 || table.status[playerIndex] === 11)))
+                                            " class="justify-content-center" style="width: 80%">
+                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100" :title="interfaceData.hint_timeout">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ table.interval - progressElapsed }}</div>
                                             </div>
                                         </div>
                                         
@@ -659,24 +1155,24 @@ methods: {
                                      <!-- Блок для кнопок / полезных советов -->
                                     <div class="row align-items-center justify-content-center" style="height: 80%;">
                                         <!--  Кнопки для ставок -->
-                                        <div v-if="1==2" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="game.stage === 4 && table.status[playerIndex] === 2 && game.speaker === playerIndex" class="container" style="height: 100%; width: 100%;">
                                             <div class="row align-items-center, main" style="height: 50%; display: grid; place-items: center;" >
                                                 <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
                                                     <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
-                                                        <div class="btn-group dropup flex-grow-1">
+                                                        <div v-if="(game.players_bet.every(item => item === 0)) && (!game.top_bet)" class="btn-group dropup flex-grow-1">
                                                             <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">{{ interfaceData.button_bet }}</button>
                                                             <ul class="dropdown-menu">
                                                                 <li v-for="myBet in [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="myBet" @click="bettingBet(myBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBet) }}</a></li>
                                                             </ul>
                                                         </div>
-                                                        <div class="btn-group dropup flex-grow-1">
+                                                        <div v-if="(!game.players_bet.every(item => item === 0)) && (!game.top_bet)" class="btn-group dropup flex-grow-1">
                                                             <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">{{ interfaceData.button_raise }}</button>
                                                             <ul class="dropdown-menu">
                                                                 <li v-for="myRaise in [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="myRaise" @click="bettingRaise(myRaise)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myRaise) }}</a></li>
                                                             </ul>
                                                         </div>
-                                                        <div class="btn-group dropup flex-grow-1">
-                                                            <button type="button" @click="bettingCall" class="btn btn-dark flex-grow-1 m-1">{{ interfaceData.button_call }}</button>
+                                                        <div v-if="(Math.max(...game.players_bet) > game.players_bet[playerIndex])" class="btn-group dropup flex-grow-1">
+                                                            <button type="button" @click="bettingCall" class="btn btn-dark flex-grow-1 m-1">{{ interfaceData.button_call }}: {{ textNumber(Math.max(...game.players_bet) - game.players_bet[playerIndex]) }}</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -685,14 +1181,14 @@ methods: {
                                             <div class="row align-items-center, main" style="height: 50%; display: grid; place-items: center;" >
                                                 <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
                                                     <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
-                                                        <button type="button" @click="bettingCheck" class="btn btn-secondary flex-grow-1 m-1">{{ interfaceData.button_check }}</button>
+                                                        <button v-if="Math.max(...game.players_bet) === 0" type="button" @click="bettingCheck" class="btn btn-secondary flex-grow-1 m-1">{{ interfaceData.button_check }}</button>
                                                         <button type="button" @click="bettingFold" class="btn btn-warning flex-grow-1 m-1">{{ interfaceData.button_fold }}</button>
                                                     </div>                                            
                                                 </div>
                                             </div>                                            
                                         </div>
                                         <!-- Кнопки врезки в Ази -->
-                                        <div v-if="1==3" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="game.stage === 10 && (table.status[playerIndex] === 8 || table.status[playerIndex] === 11)" class="container" style="height: 100%; width: 100%;">
                                             <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
                                                 <button type="button" @click="bettingAziHalfPot" class="btn btn-dark flex-grow-1 m-1 w-100">{{ interfaceData.button_azi_in }} {{ textNumber(game.azi_price) }}</button>
                                             </div>
@@ -701,11 +1197,11 @@ methods: {
                                             </div>
                                         </div>
                                         <!-- Кнопки ставок втемную -->
-                                        <div v-if="1==4" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="table.blind_game && game.stage === 2 && game.speaker === playerIndex && game.speaker_id === getUser.id" class="container" style="height: 100%; width: 100%;">
                                             <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;">
                                                 <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1 w-100" data-bs-toggle="dropdown" aria-expanded="false">{{ interfaceData.button_blind }}</button>
                                                 <ul class="dropdown-menu">
-                                                    <li v-for="myBlindBet in [5, 4, 3, 2, 1]" :key="myBlindBet" @click="bettingBlind(myBlindBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBlindBet) }} (call {{ this.textNumber(this.table.min_bet * myBlindBet * 2) }})</a></li>
+                                                    <li v-for="myBlindBet in [5, 4, 3, 2, 1]" :key="myBlindBet" @click="bettingBlind(myBlindBet)"><a class="dropdown-item" href="#">{{ interfaceData.blind_bet_button[0] }} {{ this.textNumber(this.table.min_bet * myBlindBet) }} ({{ interfaceData.blind_bet_button[1] }} {{ this.textNumber(this.table.min_bet * myBlindBet * 2) }})</a></li>
                                                 </ul>
                                             </div>
                                             <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
@@ -713,7 +1209,7 @@ methods: {
                                             </div>                                            
                                         </div>
                                         <!-- Кнопки следующей игры / выхода -->
-                                        <div v-if="(game.stage === 0)" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="(game.stage === 0) || (game.stage === 12) || (playerIndex !== null && table.status[playerIndex] === 12)" class="container" style="height: 100%; width: 100%;">
                                             <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;">
                                                 <button v-if="table.status[playerIndex] === 0" type="button" @click="readyForNewGame" class="btn btn-primary flex-grow-1 m-1 w-100">{{ interfaceData.button_gameready }}</button>
                                                 <button v-if="table.status[playerIndex] === 1" type="button" class="btn active btn-primary flex-grow-1 m-1 w-100" disabled data-bs-toggle="button" aria-pressed="true">{{ interfaceData.button_gameready }} 🗹</button>
@@ -724,9 +1220,9 @@ methods: {
                                             </div>                                            
                                         </div>
                                         <!--  Этап  сбрасывания карты -->
-                                        <div v-if="1==2" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="(game.stage === 5 && table.status[playerIndex] === 2)" class="container" style="height: 100%; width: 100%;">
                                             <div class="row align-items-center, main" style="height: 100%; display: grid; place-items: center;" >
-                                                <h4 class="text-center">{{ interfaceData.drop_yuor_card }}</h4>
+                                                <h4 class="text-center">{{ interfaceData.drop_your_card }}</h4>
                                             </div>
                                         </div>
                                     </div>
@@ -751,13 +1247,14 @@ methods: {
                             <div class="col-7 d-flex align-items-center">
                                 <div class="my-1" style="width: 100%;">                                    
                                     <h5>{{ interfaceData.table }}{{ table.id }}</h5>
-                                    <h6 v-if="table.currentgame !== 0">{{ interfaceData.game }}{{ table.currentgame }}</h6>
+                                    <h6 v-if="table.currentgame !== 0">{{ interfaceData.game }}{{ table.currentgame }}/{{ game.stage }}</h6>
                                     <h6 v-else>{{ interfaceData.game_notstarted }}</h6>
                                 </div>
                             </div>
                             <div class="col-5 d-flex justify-content-center align-items-center">
                                 <div class="d-flex flex-grow-1" style="width: 100%;">
                                     <button @click="leaveTable" class="btn btn-danger flex-grow-1 w-100">{{ interfaceData.button_leavetable }}</button>
+                                    <button @click="testFunction" class="btn btn-success flex-grow-1 w-100">TEST</button>
                                 </div>
                             </div>
                         </div>
@@ -796,18 +1293,18 @@ methods: {
                         </div>
 
                         <hr style="color: green">                        
-
+                        <!-- Никнейм игрока 
                         <div v-if="table.status">
                             <div v-if="table.currentgame !== 0 && game.speaker_id === getUser.id" class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: blue">
                                 <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ getTruncNickname(getUser.nickname) }}</b></h5>
                             </div>
-                            <div v-if="table.currentgame !== 0 && game.speaker_id !== getUser.id" class="d-flex justify-content-between align-items-center rounded-3 my-1">
+                            <div v-if="game.speaker_id !== getUser.id" class="d-flex justify-content-between align-items-center rounded-3 my-1">
                                 <h5 class="ms-2 mt-1 align-self-center"><b>{{ getTruncNickname(getUser.nickname) }}</b></h5>
                             </div>
                         </div>
 
                         <hr style="color: green">                        
-                        
+                        -->
                         <!-- Никнеймы соперников  -->
                         <div class="container">
                             <div v-if="table.status" class="row">
@@ -815,11 +1312,11 @@ methods: {
                                 <div v-for="playerN in [0, 1, 2, 3, 4, 5]" :key="playerN" style="padding: 0; margin: 0;">                                    
                                     <div v-if="game.speaker === playerN && table.players[playerN] !== 0" class="d-flex justify-content-between align-items-center rounded-3 mb-1" style="background: blue;">
                                         <b class="ms-2" style="color: aliceblue;">{{ getTruncNickname(table.players_nicknames[playerN]) }}</b> 
-                                        <b v-if="table.dealer == playerN" class="me-2 text-end" style="color: aliceblue;"> - Dealer</b>
+                                        <b v-if="table.dealer == playerN" class="me-2 text-end" style="color: aliceblue;"> - {{ interfaceData.dealer }}</b>
                                     </div>
                                     <div v-if="game.speaker !== playerN && table.players[playerN] !== 0" class="d-flex justify-content-between align-items-center rounded-3 mb-1" style="background: darkgreen;">
                                         <b class="ms-2" style="color: aliceblue;">{{ getTruncNickname(table.players_nicknames[playerN]) }}</b>
-                                        <b v-if="table.dealer == playerN" class="me-2 text-end" style="color: aliceblue;"> - Dealer</b>
+                                        <b v-if="table.dealer == playerN" class="me-2 text-end" style="color: aliceblue;"> - {{ interfaceData.dealer }}</b>
                                     </div>                                    
                                 </div>
                                 
@@ -838,15 +1335,23 @@ methods: {
                             </div>
                         </div>
 
-                        <!-- <hr style="color: green">
+                        <hr style="color: green">
+                        
+                        <div v-if="table.status && game.speaker === playerIndex">
+                            <div class="d-flex justify-content-center align-items-center rounded-3 my-1" style="background: RoyalBlue">
+                                <div class="text-center">
+                                    <h5 v-if="game.stage === 3 || game.stage === 4" class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b class="">{{ interfaceData.your_word }}</b></h5>
+                                    <h5 v-if="game.stage >= 6 && game.stage <= 8" class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b class="">{{ interfaceData.your_turn }}</b></h5>
+                                </div>
+                            </div>
+                        </div>
 
-                        <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-1" value="New game"> -->
-
+                        {{ rivalsQuantity }} {{ playerIndex }} {{ game.check_status }} {{ rivals }} {{ table.status }} {{table.players}}
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </div>            
+        </div>        
+    </div>    
 </template>
 
 <style scoped>
@@ -858,6 +1363,7 @@ methods: {
     width: 100%;
     margin: 0;
     padding: 0;
+    cursor: default;
 }
 .background-table {
     width: 100%; /* Ширина элемента */
@@ -888,9 +1394,12 @@ methods: {
 .draggable-item {
     height: 17vh;
     cursor: grab; /* Установите курсор grab для элементов, чтобы указать их перетаскиваемость */
-    pointer-events:visibleStroke; /* Уберите прозрачность и разрешите взаимодействие с элементом */
-    user-select: none; /* Запретите выделение текста внутри элемента */
-    
+    pointer-events: visibleStroke; /* Уберите прозрачность и разрешите взаимодействие с элементом */
+    user-select: none; /* Запретите выделение текста внутри элемента */    
+}
+
+.opaque {
+    opacity: 1 !important; /* Устанавливаем непрозрачность */
 }
 
 </style>

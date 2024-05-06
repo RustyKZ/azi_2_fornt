@@ -15,7 +15,7 @@
       return {
         headerData: {},
         metamaskIsHovered: false,
-        
+        user_id: 0
       };
     },
 
@@ -43,7 +43,7 @@
     },
 
     methods: {
-      ...mapActions(['changeLanguage', 'setGlobalModalErrorOn', 'setGlobalError']),
+      ...mapActions(['changeLanguage', 'setGlobalModalErrorOn', 'setGlobalError', 'setAirdropCoins', 'setReferalCoins']),
       async fetchApiHeader(languageId) {
         try {
           const response = await axios.get(`${serverUrl}/api/get_header/${languageId}`);
@@ -89,13 +89,43 @@
       returnTable(table_id) {
         this.$router.push(`/table/${table_id}`);
       },
+
+      async getAirdropCoins() {
+        const dataToSend = {
+          'user_id': this.user_id,
+          'token': localStorage.getItem('authToken')
+        }
+        try {
+          console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend)
+          const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
+          const dataResponse = response['data']
+          if (dataResponse['status']) {
+            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            this.setGlobalError(1001);
+            this.setAirdropCoins(dataResponse['airdrop']);
+            this.setReferalCoins(dataResponse['referal']);
+            this.setGlobalModalErrorOn();
+          } else {
+            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            //this.setGlobalError(dataResponse['error']);  
+            //this.setGlobalModalErrorOn();
+          }
+        } catch(error) {
+          console.error('Airdrop catch')
+          this.setGlobalError(0);
+          this.setGlobalModalErrorOn();
+        }
+      },
+
       async metamaskConnect() {
         console.log('METAMASCT CONNECT');
         const walletStatus = await walletConnect('', this.getCurrentLanguage);
         console.log('METAMASK CONNECT response: ', walletStatus);
         if (walletStatus.logged_in) {
-          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          this.user_id = walletStatus.user_id;
+          console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
           this.changeLanguage(walletStatus.user_language);
+          await this.getAirdropCoins();
           this.$router.push('/');
         } else {
           this.setGlobalModalErrorOn();
@@ -120,6 +150,10 @@
 
       getTruncWallet() {
         return trunc_9_4(this.getUser.wallet)
+      },
+
+      returnSandbox() {
+        this.$router.push(`/sandbox/`);
       }
     }
   }
@@ -131,7 +165,6 @@
   <header class="p-3 text-bg-dark">
     <div class="container">
       <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-        
         <div class="d-flex align-items-center text-white text-decoration-none">
           <img @click="goToHomePage" class="link_button mt-1 me-4" src="/images/logo.png" alt="AZI Online" style="cursor: pointer;">
         </div>
@@ -148,6 +181,7 @@
           <button v-if="isAuth" type="button" @click="goToProfilePage" class="btn btn-outline-primary me-2">{{ getTruncNickname() }}</button>
           <button v-if="isAuth && userActiveTable > 0" @click="returnTable(userActiveTable)" type="button" class="btn btn-primary me-2">{{ headerData.table }} {{ userActiveTable }}</button>
           <button v-if="isAuth && userActiveTable == -1" type="button" class="btn btn-primary me-2" style="cursor: default">{{ headerData.hall }}</button>
+          <button v-if="isAuth && userActiveTable == -2" @click="returnSandbox" type="button" class="btn btn-primary me-2">{{ headerData.sandbox }}</button>
           <button v-if="!isAuth" @click="goToSignupPage" type="button" class="btn btn-outline-light me-2">{{ headerData.signup }}</button>
           <button v-if="!isAuth" @click="goToLoginPage" type="button" class="btn btn-outline-light me-2">{{ headerData.login }}</button>
           <button v-if="isAuth && !isAuthWeb3" @click="goToLogout" type="button" class="btn btn-outline-light me-2">{{ headerData.logout }}</button>

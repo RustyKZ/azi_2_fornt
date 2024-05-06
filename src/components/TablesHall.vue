@@ -38,7 +38,7 @@ export default {
     return {
       interfaceData: {},
       globalInterfaceData: [],
-      user: {},      
+      user: {},
       roomId: 'tables_hall',
       userData: {
         is_auth: false,
@@ -84,6 +84,12 @@ export default {
     this.$socket.on('join_table_response', (data) => {
       this.joinTableResponse(data);
     });
+    this.$socket.on('join_sandbox_response', (data) => {
+      this.goTrainingResponse(data);
+    });
+    this.$socket.on('get_private_notice', (data) => {
+      this.getPrivateNotice(data);
+    });
     this.joinTablesHall();
   },
 
@@ -97,6 +103,18 @@ export default {
   methods: {
     ...mapActions(['setGlobalModalErrorOn', 'setGlobalError', 'setActiveTable']),
 
+    getPrivateNotice(data) {
+        if (data.status) {
+            if (data.error == 712) {
+                this.setGlobalError(data.error);
+                this.setGlobalModalErrorOn();
+                console.log('GET PRIVATE NOTICE - DATA: ', data)
+            }            
+        } else {
+            console.log('GET PRIVATE NOTICE - DATA: ', data);
+        }
+    },
+    
     joinTablesHall() {      
       this.$socket.emit('join_tables_hall', { user_id: this.userData.user_id });
       console.log(`TABLES HALL JOIN ROOM: User ${this.userData.django_name} joined to TABLES HALL`);
@@ -143,7 +161,8 @@ export default {
         if (user.id === this.userData.user_id) {
             const newActiveTable = user.active_table;
             this.$store.commit('setActiveTable', newActiveTable);
-        }        
+        }
+
       });
       this.tables = data.all_tables.map(table => {
         return { ...table, editing: false };
@@ -179,8 +198,27 @@ export default {
       }
     },
 
-    joinTableRequest(table_id, table_protected) {
+    goTrainingRequest() {
       if (this.userData.active_table === 0 || this.userData.active_table === -1) {
+        this.$socket.emit('join_sandbox_outside', { user_id: this.userData.user_id });
+      } else if (this.userData.active_table > 0) {
+        this.setGlobalError(702);
+        this.setGlobalModalErrorOn();
+      }
+    },
+
+    goTrainingResponse(data) {      
+      console.log('GO TRAINING RESPONSE: ', data);      
+      if (data.status) {
+        this.$router.push(`/sandbox/`);
+      } else {
+        this.setGlobalError(data.error);
+        this.setGlobalModalErrorOn();
+      }
+    },
+
+    joinTableRequest(table_id, table_protected) {
+      if (this.userData.active_table === 0 || this.userData.active_table === -1 || this.userData.active_table === -2) {
         if (!table_protected) {
           this.$socket.emit('join_table_outside', { user_id: this.userData.user_id, table_id: table_id, table_password: '' });
           console.log('JOIN TABLE : user ', this.userData.user_id, ' table ', table_id)
@@ -201,7 +239,7 @@ export default {
           this.setGlobalModalErrorOn();
         }
       }
-    },
+    },    
 
     joinTableResponse(data) {      
       console.log('JOIN TABLE RESPONSE: ', data);      
@@ -246,10 +284,12 @@ export default {
 
     training() {
       console.log('TABLES HALL - Training');
+      this.$router.push(`/sandbox/`);
     },
 
-    createTable() {
+    createTable() {    
       console.log('TABLES HALL - Create table');
+      this.$router.push(`/create_table/`);
     }
   },
 
@@ -259,11 +299,10 @@ export default {
 
 <template>
   <div class="mainbox">
-    <div class="container-xxl">
+    <div v-if="sortedTables.length !== 0" class="container-xxl">
       <div class="row">
-
         <!--Левая панель со столами-->
-        <div class="col-9">          
+        <div class="col-9">
           <div class="container mt-3">
             <div v-for="(table) in sortedTables" :key="table.id">
               <div v-if="!( (hidePrivate && table.protected) ||
@@ -282,8 +321,7 @@ export default {
                       <!-- Колонка с опсианием полей -->
                       <div class="col-4 d-flex justify-content-center align-items-center">
                         <div class="container">
-                          <h5 style="display: inline-block; margin-right: 10px;">{{ interfaceData.tc_table }} <b>#{{
-                            table.id }}</b></h5><span v-if="table.protected" class="password-protected">🔒<span class="tooltiptext">{{ interfaceData.tc_password_protected }}</span></span>
+                          <h5 style="display: inline-block; margin-right: 10px;">{{ interfaceData.tc_table }} <b>#{{table.id }}</b></h5><span class="password-protected">&#8987;<span class="tooltiptext">{{ interfaceData.hint_timeout }} {{ table.interval }}</span></span><span v-if="table.protected" class="password-protected">🔒<span class="tooltiptext">{{ interfaceData.tc_password_protected }}</span></span>
                           <div>
                             <h6>{{ interfaceData.tc_max_players }} <b>{{ table.max_players }}</b></h6>
                             <h6>{{ interfaceData.tc_ante }} <b>{{ table.min_bet }}</b></h6>
@@ -508,7 +546,7 @@ export default {
               <!-- Кнопка Training -->
               <div class="my-2 mb-3 d-flex justify-content-center" style="width: 100%;">
                 <div class="d-flex justify-content-center" style="width: 80%;">
-                  <input @click="training" type="submit" class="btn btn-outline-success flex-grow-1" :value="interfaceData.training" :title="interfaceData.hint_training">
+                  <input @click="goTrainingRequest" type="submit" class="btn btn-outline-success flex-grow-1" :value="interfaceData.training" :title="interfaceData.hint_training">
                 </div>
               </div>
               <hr style="color: green">
@@ -529,9 +567,32 @@ export default {
             </div>
           </div>
         </div>
-
       </div>
     </div>
+
+    <!-- Нет открытых столов -->
+    <div v-if="sortedTables.length === 0" class="container-fluid d-flex align-items-center justify-content-center">
+      <div class="container mt-3 mb-3">
+        <div class="row p- pb-0 pe-lg-0 pt-lg-5 align-items-center rounded-4 border shadow-lg" style="background: aliceblue;">
+
+          <div class="col-lg-6 p-3 p-lg-5 pt-lg-3">
+            <h4 class="display-5 fw-bold lh-1 text-body-emphasis">{{ interfaceData.empty_hall_title }}</h4>
+            <p class="lead mt-2">{{ interfaceData.empty_hall_text }}</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
+              <button @click="createTable" :title="interfaceData.hint_create_table" type="button" class="btn btn-success btn-lg px-4 me-md-2 fw-bold">{{ interfaceData.create_table }}</button>
+              <button @click="goTrainingRequest" :title="interfaceData.hint_training" type="button" class="btn btn-outline-success btn-lg px-4">{{ interfaceData.training }}</button>
+            </div>
+          </div>
+
+          <div class="col-lg-5 offset-lg-1 p-0">
+            <div class="container d-flex align-items-center justify-content-center">
+              <img class="mb-4" src="images/site_picture_cardtable.png" style="width: 95%; float: left">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   </div>
 </template>
 
@@ -544,6 +605,7 @@ export default {
     width: 100%;
     margin: 0;
     padding: 0;
+    cursor: default;
 }
 .img-container {
     width: 100%; /* Масштабировать изображение по ширине родительского контейнера */

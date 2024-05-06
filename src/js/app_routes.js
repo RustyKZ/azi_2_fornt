@@ -10,13 +10,16 @@ import Error_404_Page from '../components/404.vue'
 import Error_500_Page from '../components/500.vue'
 import PlayerProfile from '../components/PlayerProfile.vue'
 import PlayerReview from '../components/PlayerReview.vue'
+import PlayerHistory from '../components/PlayerHistory.vue'
 import AccessDeniedPage from '../components/AccessDenied.vue'
 import TablesHall from '../components/TablesHall.vue'
 import PlayingTable from '../components/PlayingTable.vue'
-// import Create_Table from './components/CreateTable.vue'
+import CreateTable from '../components/CreateTable.vue'
 import GameRulesPage from '../components/GameRulesPage.vue'
 import TopListPage from '../components/TopListPage.vue'
 import AboutPage from '../components/AboutPage.vue'
+import Sandbox from '../components/Sandbox.vue'
+
 // import Donation_Page from './components/DonationPage.vue'
 
 const router = createRouter({
@@ -26,7 +29,7 @@ const router = createRouter({
     { path: '/signup/:signupArgument', component: AppSignup, props: true },
     { path: '/login', component: AppLogin },
     { path: '/access_denied', component: AccessDeniedPage },
-//    { path: '/create_table', component: Create_Table, meta: { requiresAuth: true } },
+    { path: '/create_table', component: CreateTable, name: 'CreateTable' },
     { path: '/rules', component: GameRulesPage },
     { path: '/toplist', component: TopListPage },
     { path: '/about', component: AboutPage },
@@ -35,9 +38,12 @@ const router = createRouter({
     { path: '/500', component: Error_500_Page },
     { path: '/profile/:user_id', component: PlayerProfile, name: 'ProfilePage' },
     { path: '/review/:user_id/', component: PlayerReview, name: 'ReviewPage' },
+    { path: '/history/:user_id/', component: PlayerHistory, name: 'HistoryPage' },
 //    { path: '/donation', component: Donation_Page },
-    { path: '/tables', component: TablesHall, name: 'TablesHall' },    
+    { path: '/tables', component: TablesHall, name: 'TablesHall' },
+    { path: '/sandbox', component: Sandbox, name: 'SandboxPage' },
     { path: '/table/:table_id', component: PlayingTable, name: 'PlayingTablePage' },
+    { path: '/:catchAll(.*)', redirect: '/404' }
    ],
   history: createWebHistory()
 })

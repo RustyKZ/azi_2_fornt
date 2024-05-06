@@ -7,6 +7,7 @@ export default new Vuex.Store({
     authByWeb3: false,
     globalModalError: false,
     globalErrorNumber: 0,
+    globalErrorCustomText: '',
     currentActiveTable: parseInt(localStorage.getItem('currentActiveTable')) || 0,
     user: {
       id: 0,
@@ -14,7 +15,9 @@ export default new Vuex.Store({
       django_name: '',
       wallet: '',
       active_table: 0
-    },    
+    },
+    airdropCoins: [0, 0, 0],
+    referalCoins: [0, 0, 0]
   },
   mutations: {
     setCurrentLanguage(state, newLanguage) {
@@ -46,15 +49,24 @@ export default new Vuex.Store({
     },
     setActiveTable(state, newActiveTable) {
       state.currentActiveTable = newActiveTable;
+    },
+    setGlobalErrorCustomText(state, newCustomText) {
+      state.globalErrorCustomText = newCustomText;
+    },
+    setAirdropCoins(state, newValue) {
+      state.airdropCoins = newValue
+    },
+    setReferalCoins(state, newValue) {
+      state.referalCoins = newValue
     }
-
   },
   actions: {
     changeLanguage({ commit }, newLanguage) {              
       localStorage.setItem('currentLanguage', newLanguage);
       commit('setCurrentLanguage', newLanguage);
     },
-    setGlobalError({ commit }, newNumber) {                    
+    setGlobalError({ commit }, newNumber) {
+      console.log('VUEX: SET GLOBAL ERROR NEW NUMBER - ', newNumber)
       commit('setGlobalErrorNumber', newNumber);
     },
     changeStatusLoggedIn({ commit }) {
@@ -87,7 +99,17 @@ export default new Vuex.Store({
     },
     setActiveTable({ commit }, newActiveTable) {
       localStorage.setItem('currentActiveTable', newActiveTable);
-      commit('setActiveTable', newActiveTable)
+      commit('setActiveTable', newActiveTable)    
+    },
+    setGlobalErrorCustomText({ commit }, newCustomText) {
+      localStorage.setItem('globalErrorCustomText', newCustomText);
+      commit('setGlobalErrorCustomText', newCustomText);      
+    },
+    setAirdropCoins({ commit }, newValue) {
+      commit('setAirdropCoins', newValue);      
+    },
+    setReferalCoins({ commit }, newValue) {
+      commit('setReferalCoins', newValue);      
     }
   },
   getters: {
@@ -98,6 +120,9 @@ export default new Vuex.Store({
     globalErrorNumber: (state) => state.globalErrorNumber,
     getUser: (state) => state.user,
     getActiveTable: (state) => state.currentActiveTable,
+    getGlobalErrorCustomText: (state) => state.globalErrorCustomText,
+    getAirdropCoins: (state) => state.airdropCoins,
+    getReferalCoins: (state) => state.referalCoins,
   },
 });
 

@@ -118,7 +118,8 @@
     font-size: 16px;
     width: 100%;
     margin: 0;
-    padding: 0;  
+    padding: 0;
+    cursor: default;  
 
 }
 .custom-container {

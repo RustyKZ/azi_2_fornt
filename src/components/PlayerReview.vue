@@ -74,7 +74,7 @@ export default {
     async getUserData() {
       this.userId = this.$route.params.user_id;
       try {        
-        const response = await axios.get(`${serverUrl}/api/get_user_review_data/${this.userId}`);      
+        const response = await axios.get(`${serverUrl}/api/get_user_review_data/${this.userId}`);
         this.userNickname = response.data.username;
         this.userReview = response.data.comments.map(comment => {
           return {
