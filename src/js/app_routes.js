@@ -19,6 +19,9 @@ import GameRulesPage from '../components/GameRulesPage.vue'
 import TopListPage from '../components/TopListPage.vue'
 import AboutPage from '../components/AboutPage.vue'
 import Sandbox from '../components/Sandbox.vue'
+//import PaypalDonation from '../components/PaypalDonation.vue'
+import SupportPage from '../components/SupportPage.vue'
+import TermsPage from '../components/TermsPage.vue'
 
 // import Donation_Page from './components/DonationPage.vue'
 
@@ -43,7 +46,11 @@ const router = createRouter({
     { path: '/tables', component: TablesHall, name: 'TablesHall' },
     { path: '/sandbox', component: Sandbox, name: 'SandboxPage' },
     { path: '/table/:table_id', component: PlayingTable, name: 'PlayingTablePage' },
+    //{ path: '/paypal', component: PaypalDonation, name: 'PaypalDonation' },
+    { path: '/support', component: SupportPage, name: 'SupportPage' },
+    { path: '/terms', component: TermsPage, name: 'TermsPage' },
     { path: '/:catchAll(.*)', redirect: '/404' }
+    
    ],
   history: createWebHistory()
 })

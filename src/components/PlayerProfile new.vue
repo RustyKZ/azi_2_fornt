@@ -6,15 +6,52 @@ import { email_check_auth } from '@/js/auth';
 import { trunc_55 } from '../js/supply'
 import { getTokenAmount, tokenTransfer, getSignature, getWalletAmount, tokenTransferUSDT, bnbTransfer } from '@/js/token'
 import { get_ip_address } from '@/js/ip_address.js';
-import PaypalDonation from '@/components/PaypalDonation.vue'
 
+import { ref, onMounted, computed } from 'vue'
+import { loadScript } from '@paypal/paypal-js'
 
 
 export default {
   name: 'PlayerProfile',
   components: {
-    PaypalDonation
+    
   },
+
+  setup() {
+    console.log('PAYPAL DONATION - setup...');
+    const paypalButton = ref(null);
+    const paypalDepositString = computed(() => this.depositValueSilverPaypal.toString());
+    onMounted(() => {
+      // Загрузка SDK PayPal
+      loadScript({ 'client-id': 'ATVtjFAQiW84uJSCELJDy89J8MA-u6ldK_k9FlSqkXcuDad7DRfi3L9DBFxbL5O9RWyujt5VOnqWWZuh' }).then(() => {
+        // Инициализация кнопки PayPal
+        window.paypal.Buttons({
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: paypalDepositString.value,
+                  currency_code: 'USD'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              // Обработка успешного платежа
+              console.log('Payment successful:', details);
+            });
+          },
+          onError: function(err) {
+            // Обработка ошибки платежа
+            console.error('Payment error:', err);
+          }
+        }).render(paypalButton.value)
+      })
+    })      
+    return { paypalButton }
+  },
+
 
   computed: {
     ...mapGetters(['getCurrentLanguage', 'isAuth', 'isAuthWeb3', 'globalModalError', 'getUser']),
@@ -32,6 +69,10 @@ export default {
     walletTokenAmountNumber() {
       return Number(this.walletTokenAmount);
     },
+
+    paypalDepositString() {
+      return this.depositValueSilverPaypal.toString();
+    }
   },
 
   watch: {
@@ -48,7 +89,7 @@ export default {
         this.getUserProfile();        
       },
     },
-
+    
   },
 
   data() {
@@ -85,10 +126,10 @@ export default {
       buttonVisiblePhone: true,
       buttonVisibleWithdraw: true,
       depositValueGold: 1,
-      depositValueSilverPaypal: 10,
+      depositValueSilverPaypal: 1,
       depositValueSilverUSDT: 1,
       depositValueSilverBNB: 0.01,
-      depositValueSilverCard: 10,
+      depositValueSilverCard: 1,
       withdrawValue: 100,
       walletTokenAmount: 0,
       withdrawMinLimit: 100,
@@ -105,7 +146,7 @@ export default {
       enoughUSDT: true,
       rateUSD: 1000,
       rateBNB: 500000,
-      // paypalClientId: 'ATVtjFAQiW84uJSCELJDy89J8MA-u6ldK_k9FlSqkXcuDad7DRfi3L9DBFxbL5O9RWyujt5VOnqWWZuh'
+      paypalClientId: ''
     };
   },
 
@@ -116,12 +157,11 @@ export default {
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
     }
     await this.fetchApiForm();
-    console.log('player profile - CREATED');
     this.getUserProfile();
   },
 
   mounted() {
-    console.log('player profile - MOUNTED');
+    console.log('MOUNTED');
 
   },
 
@@ -574,7 +614,8 @@ export default {
         } else {
           this.setGlobalError(getTokenQuantity['error']);
           this.setGlobalModalErrorOn();
-        }        
+        }
+        
       }
     },
 
@@ -802,15 +843,15 @@ export default {
         const dataToSend = {
           'user_id': this.userId,
           'token': localStorage.getItem('authToken'),
-          'payment_id': '97B60793V0849550E',
-          'payment_value': 57,
+          'payment_id': '0PH07554E7165302V',
+          'payment_value': 100,
           'ip_address': ip_address
         }              
         const response = await axios.post(`${serverUrl}/api/user_deposit_silver_paypal`, dataToSend);
           console.log('testFUNCTION response - ', response);          
           const responseData = response['data']
           if (responseData['status']) {
-            this.setGlobalError(488); // Сообщение об успешном завершении транзакции
+            this.setGlobalError(487); // Сообщение об успешном завершении транзакции
             this.setGlobalModalErrorOn();
           } else {
             console.error('testFUNCTION esle ERROR', response)
@@ -912,7 +953,7 @@ export default {
                 if (responseData['status']) {
                   await this.getUserProfile();
                   this.closeDepositSilver();
-                  this.setGlobalError(488); // Сообщение об успешном завершении транзакции
+                  this.setGlobalError(487); // Сообщение об успешном завершении транзакции
                   this.setGlobalModalErrorOn();
                 } else {
                   this.setGlobalError(responseData['error']); // Сообщение об ошибке
@@ -963,48 +1004,6 @@ export default {
       this.buttonVisibleWithdraw = true;
     },
 
-    async handlePaypalSuccess(details) {
-      console.log('PLAYER PROFILE - Paypal success:', details);
-      this.setGlobalError(487);
-      this.setGlobalModalErrorOn();
-      try {
-        const ip_address = await get_ip_address();
-        const dataToSend = {
-          'user_id': this.userId,
-          'token': localStorage.getItem('authToken'),
-          'payment_id': details.id,
-          'payment_value': Number(this.depositValueSilverPaypal),
-          'ip_address': ip_address
-        }              
-        const response = await axios.post(`${serverUrl}/api/user_deposit_silver_paypal`, dataToSend);
-          console.log('testFUNCTION response - ', response);          
-          const responseData = response['data']
-          if (responseData['status']) {
-            await this.getUserProfile();
-            this.depositValueSilverPaypal = 10;
-            this.closeDepositSilver();
-            this.setGlobalError(488); // Сообщение об успешном завершении транзакции
-            this.setGlobalModalErrorOn();
-          } else {
-            console.error('testFUNCTION esle ERROR', response)
-            this.setGlobalError(responseData['error']); // Сообщение об ошибке
-            this.setGlobalModalErrorOn();
-          }              
-      } catch(error) {
-        console.error(error)
-        this.setGlobalError(0);
-        this.setGlobalModalErrorOn();
-      }
-    },
-
-    handlePaypalError(err) {
-      console.error('PLAYER PROFILE - Paypal error:', err);
-      this.depositValueSilverPaypal = 10;
-      this.closeDepositSilver();
-      this.setGlobalError(650);
-      this.setGlobalModalErrorOn();
-    },
-
   }
 }
 
@@ -1014,12 +1013,13 @@ export default {
   <div class="content">    
     <div class="mainbox" style="cursor: default;">
       <div class="container my-3">        
-        <div class="container mt-5; height: 100% ">          
+        <div class="container mt-5; height: 100% ">
+          
           <div v-if="refLinkCopied" class="alert alert-success" role="alert">
             {{ formData.alert_ref_link_copied }} 
           </div>
           <div class="alert alert-info" style="background: #F0FFF0; border: solid 1px green">
-            <h3><b> {{ user.nickname }} </b> - {{ formData.title }}</h3> <button @click="testFunction">TEST function</button>
+            <h3><b> {{ user.nickname }} </b> - {{ formData.title }}</h3> <button @click="testFunction">TEST function</button> {{paypalDepositString}}
             <hr>
             <!-- USER NICKNAME -->
             <div class="row align-items-center d-flex" style="height: 36px;">
@@ -1116,8 +1116,6 @@ export default {
                   </p>
                   <div>
                     <a :href="formData.link_more_info_support" target="_blank">{{ formData.more_info_silver}}</a>
-                    <br>
-                    <a :href="formData.link_terms" target="_blank">{{ formData.link_terms_text}}</a>
                   </div>
                 </div>
               </div>
@@ -1190,14 +1188,10 @@ export default {
               <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="col-md-1 align-items-center d-flex">
               </div>
               <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="col-md-8 d-flex">
-                <div v-if="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="text-justify">
-                  <p>
-                    {{ formData.text_deposit_silver_paypal }}
-                  </p>                  
-                </div>
+                <p v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
               </div>
               <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="col-md-3 align-items-end">                
-                  <PaypalDonation v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" :DonationValue="Number(depositValueSilverPaypal)" @paypalSuccess="handlePaypalSuccess" @paypalError="handlePaypalError"/>                
+                  <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" ref="paypalButton"></div>                
               </div>
             </div>
 
