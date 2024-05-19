@@ -160,8 +160,7 @@ export default {
 
 <template>
     <div class="mainbox">        
-        <div class="container my-5">
-            {{ userData }}
+        <div class="container my-5">            
                 <div class="bg-body-tertiary p-5 rounded">
                     <h2>{{ interfaceData.title }}</h2>
                     <hr>

@@ -73,6 +73,9 @@
       goToAboutPage() {
         this.$router.push('/about');
       },
+      goToTermsPage() {
+        this.$router.push('/terms');
+      },
       goToProfilePage() {
         this.$router.push(`/profile/${this.getUser.id}`);
       },
@@ -163,18 +166,18 @@
 <template>
 
   <header class="p-3 text-bg-dark">
-    <div class="container">
+    <div class="container-xxl">
       <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
         <div class="d-flex align-items-center text-white text-decoration-none">
           <img @click="goToHomePage" class="link_button mt-1 me-4" src="/images/logo.png" alt="AZI Online" style="cursor: pointer;">
-        </div>
-        
+        </div>        
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
 
           <li @click="goToTablesPage" class="btn btn-success me-2">{{ headerData.play }}</li>
           <li @click="goToGameRulesPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.rules }}</li>
           <li @click="goToToplistPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.top }}</li>
           <li @click="goToAboutPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.about }}</li>
+          <li @click="goToTermsPage" class="nav-link px-2 text-white link_button" style="cursor: pointer;">{{ headerData.terms }}</li>
         </ul>
 
         <div class="text-end">

@@ -1,6 +1,6 @@
 <script>
   import axios from 'axios';
-  import { serverUrl, clientUrl } from '../main';
+  import { serverUrl, clientUrl, googleClientId } from '../main';
   import { mapGetters, mapActions } from 'vuex';
   import { email_login } from '../js/auth';
   import { walletConnect } from '@/js/web3auth';  
@@ -131,7 +131,7 @@
         form.setAttribute('action', oauth2Endpoint);
         // Parameters to pass to OAuth 2.0 endpoint.
         var params = {
-              'client_id': '746578585810-cl1hd0s6kvde9dqq4u39gbpb68mmrpib.apps.googleusercontent.com',
+              'client_id': googleClientId,
               // 'redirect_uri': 'http://127.0.0.1:8000/api/user_login_google/',
               'redirect_uri': `${clientUrl}/oauth_google/`,
               'response_type': 'token',
@@ -185,7 +185,7 @@
           <div class="bg-body-tertiary p-5 rounded">
             <h3>{{ formData.title }}</h3>
             <hr>
-            <form @submit.prevent="loginUser">              
+            <form @submit.prevent="loginUser">
               <div class="form-floating mb-3">
                 <input v-model="user_login.email" type="email" class="form-control" id="floatingEmail" placeholder="name@example.com">
                 <label for="floatingInput">{{ formData.email }}</label>

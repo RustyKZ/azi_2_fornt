@@ -1,6 +1,6 @@
 <script>
   import axios from 'axios';
-  import { serverUrl,clientUrl } from '../main';
+  import { serverUrl, clientUrl, googleClientId } from '../main';
   import { mapGetters, mapActions } from 'vuex';
   import { email_login } from '@/js/auth';
   import { get_ip_address } from '@/js/ip_address.js';
@@ -167,13 +167,11 @@
         form.setAttribute('action', oauth2Endpoint);
         // Parameters to pass to OAuth 2.0 endpoint.
         var params = {
-              'client_id': '746578585810-cl1hd0s6kvde9dqq4u39gbpb68mmrpib.apps.googleusercontent.com',
-              // 'redirect_uri': 'http://127.0.0.1:8000/api/user_login_google/',
+              'client_id': googleClientId,
               'redirect_uri': `${clientUrl}/oauth_google/`,
               'response_type': 'token',
-              'scope': 'https://www.googleapis.com/auth/userinfo.email', //https://www.googleapis.com/auth/userinfo.profile 
-              'include_granted_scopes': 'true',
-              // 'state': 'pass-through value',
+              'scope': 'https://www.googleapis.com/auth/userinfo.email',
+              'include_granted_scopes': 'true',              
               'state': this.user_reg.ref_code,
         };
         // Add form parameters as hidden input values.
@@ -345,7 +343,8 @@
                 </div>
               </div>
             </form>
-
+            <hr>
+            <p v-html="formData.privacy_text" style="text-align: justify;"></p>
           </div>
         </div>
       </div>

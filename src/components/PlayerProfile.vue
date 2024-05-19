@@ -311,8 +311,7 @@ export default {
       } catch (error) {
         this.setGlobalError(0);
         this.setGlobalModalErrorOn();
-      }
-      
+      }      
     },
 
     startEditingCountry() {      
@@ -441,6 +440,14 @@ export default {
         return '';
       }
       return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    },
+
+    textRating(number) {
+      if (typeof number !== 'number') {
+        return '';
+      }
+      const cutNumber = number.toFixed(2)
+      return cutNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     },
 
     async getReferalLink() {
@@ -797,6 +804,8 @@ export default {
     },
 
     async testFunction() {
+      console.log(this.user.rating);
+      
       try {
         const ip_address = await get_ip_address();
         const dataToSend = {
@@ -977,7 +986,7 @@ export default {
           'ip_address': ip_address
         }              
         const response = await axios.post(`${serverUrl}/api/user_deposit_silver_paypal`, dataToSend);
-          console.log('testFUNCTION response - ', response);          
+          console.log('handle Paypal Success - ', response);          
           const responseData = response['data']
           if (responseData['status']) {
             await this.getUserProfile();
@@ -986,7 +995,7 @@ export default {
             this.setGlobalError(488); // Сообщение об успешном завершении транзакции
             this.setGlobalModalErrorOn();
           } else {
-            console.error('testFUNCTION esle ERROR', response)
+            console.error('handle Paypal Success - ERROR', response)
             this.setGlobalError(responseData['error']); // Сообщение об ошибке
             this.setGlobalModalErrorOn();
           }              
@@ -1019,7 +1028,7 @@ export default {
             {{ formData.alert_ref_link_copied }} 
           </div>
           <div class="alert alert-info" style="background: #F0FFF0; border: solid 1px green">
-            <h3><b> {{ user.nickname }} </b> - {{ formData.title }}</h3> <button @click="testFunction">TEST function</button>
+            <h3><b> {{ user.nickname }} </b> - {{ formData.title }}</h3>
             <hr>
             <!-- USER NICKNAME -->
             <div class="row align-items-center d-flex" style="height: 36px;">
@@ -1190,8 +1199,8 @@ export default {
               <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="col-md-1 align-items-center d-flex">
               </div>
               <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="col-md-8 d-flex">
-                <div v-if="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="text-justify">
-                  <p>
+                <div v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'" class="text-justify">
+                  <p v-show="user.owner && divDepositVisibleSilver && paymentMethod === 'paypal'">
                     {{ formData.text_deposit_silver_paypal }}
                   </p>                  
                 </div>
@@ -1209,8 +1218,11 @@ export default {
               <div class="col-md-5 align-items-center d-flex">
                 <h5 :title="formData.hint_goldcoin"><b> {{ textNumber(user.goldcoin) }} </b></h5><br>
               </div>
+              
               <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
+                <!--
                 <button v-if="!divDepositVisibleGold && buttonVisibleWithdraw" @click="openWithdrawGold" :title="formData.hint_withdraw" class="btn btn-outline-success btn-sm w-100">{{ formData.button_withdraw }}</button>
+                -->
               </div>
               <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
                 <button v-if="!divDepositVisibleGold && buttonVisibleGold" @click="openDepositGold" class="btn btn-warning btn-sm w-100">{{ formData.button_addgoldcoin }}</button>
@@ -1227,6 +1239,8 @@ export default {
                   </p>
                   <div>
                     <a :href="formData.link_more_info_token" target="_blank">{{ formData.text_more_info_token}}</a>
+                    <br>
+                    <a :href="formData.link_terms" target="_blank">{{ formData.link_terms_text}}</a>
                   </div>
                 </div>
               </div>
@@ -1396,10 +1410,40 @@ export default {
                 <h5 class="me-3">{{ formData.rating }}</h5>
               </div>
               <div class="col-md-7 align-items-center d-flex">
-                <h5 :title="formData.hint_rating"><b> {{ textNumber(user.rating) }} </b></h5><br>
+                <h5 :title="formData.hint_rating"><b> {{ textRating(user.rating) }} </b></h5><br>
               </div>
               <div v-if="user.owner && buttonVisibleHistory" class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
                 <button @click="goToHistoryPage()" class="btn btn-secondary btn-sm w-100">{{ formData.button_gamehistory }}</button>
+              </div>
+            </div>
+            <!-- GAMES PLAYED -->
+            <div class="row align-items-center d-flex" :title="formData.hint_games_played" style="height: 36px;">
+              <div class="col-md-3">
+                <h5 class="me-3">{{ formData.games_played }}</h5>
+              </div>
+              <div class="col-md-7 align-items-center d-flex">
+                <span :title="formData.hint_games_played_total" class="me-5"><h5><b> {{ textNumber(user.games_played_silver + user.games_played_gold + user.games_played_bonus) }} </b></h5></span>
+                <span :title="formData.hint_games_played_silver" class="ms-3"><h5 class="badge text-bg-secondary"> {{ textNumber(user.games_played_silver) }} </h5></span>
+                <span :title="formData.hint_games_played_gold" class="ms-3"><h5 class="badge text-bg-warning"> {{ textNumber(user.games_played_gold) }} </h5></span>
+                <span :title="formData.hint_games_played_bonus" class="ms-3"><h5 class="badge text-bg-success"> {{ textNumber(user.games_played_bonus) }} </h5></span>
+              </div>
+              <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
+                
+              </div>
+            </div>
+            <!-- GAMES WON -->
+            <div class="row align-items-center d-flex" :title="formData.hint_games_win" style="height: 36px;">
+              <div class="col-md-3">
+                <h5 class="me-3">{{ formData.games_win }}</h5>
+              </div>
+              <div class="col-md-7 align-items-center d-flex">
+                <span :title="formData.hint_games_played_total" class="me-5"><h5><b> {{ textNumber(user.wins_silver + user.wins_gold + user.wins_bonus) }} </b></h5></span>
+                <span :title="formData.hint_games_played_silver" class="ms-3"><h5 class="badge text-bg-secondary"> {{ textNumber(user.wins_silver) }} </h5></span>
+                <span :title="formData.hint_games_played_gold" class="ms-3"><h5 class="badge text-bg-warning"> {{ textNumber(user.wins_gold) }} </h5></span>
+                <span :title="formData.hint_games_played_bonus" class="ms-3"><h5 class="badge text-bg-success"> {{ textNumber(user.wins_bonus) }} </h5></span>
+              </div>
+              <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
+                
               </div>
             </div>
             <!-- USER REFERRAL LINK -->

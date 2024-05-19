@@ -4,7 +4,7 @@
   import { mapGetters } from 'vuex';
 
   export default {
-    name: 'SupportPage',
+    name: 'TokenPage',
 
     computed: {
       ...mapGetters(['getCurrentLanguage']),
@@ -49,7 +49,7 @@
 
       async getPageData(languageId) {
         try {
-          const response = await axios.get(`${serverUrl}/api/get_supportpage_data/${languageId}`);
+          const response = await axios.get(`${serverUrl}/api/get_tokenpage_data/${languageId}`);
           this.pageData = response.data;
           if (this.pageData.result) {
             this.articles = JSON.parse(this.pageData.articles);

@@ -801,7 +801,7 @@ methods: {
                                         <!-- Верхний ряд 1/3 - Имена соперников -->
                                         <div class="align-items-center" style="height: 25%;">                                            
                                             <div @click="goToPlayerProfile(rival)" class="main rounded-5" :style="{ background: statusColor[table.status[rival.index]] }" style="cursor: pointer; text-align: center; vertical-align: middle">
-                                                {{ rival.index }} <b style="color: white"> {{ getTruncNickname20(rival.nickname) }}</b>
+                                                <b style="color: white"> {{ getTruncNickname20(rival.nickname) }}</b>
                                             </div>
                                         </div>
                                         <!-- Верхний ряд 2/3 - Карты соперников -->
@@ -1247,14 +1247,15 @@ methods: {
                             <div class="col-7 d-flex align-items-center">
                                 <div class="my-1" style="width: 100%;">                                    
                                     <h5>{{ interfaceData.table }}{{ table.id }}</h5>
-                                    <h6 v-if="table.currentgame !== 0">{{ interfaceData.game }}{{ table.currentgame }}/{{ game.stage }}</h6>
+                                    <h6 v-if="table.currentgame !== 0">{{ interfaceData.game }}{{ table.currentgame }}</h6>
                                     <h6 v-else>{{ interfaceData.game_notstarted }}</h6>
                                 </div>
                             </div>
                             <div class="col-5 d-flex justify-content-center align-items-center">
                                 <div class="d-flex flex-grow-1" style="width: 100%;">
+                                    <!--
                                     <button @click="leaveTable" class="btn btn-danger flex-grow-1 w-100">{{ interfaceData.button_leavetable }}</button>
-                                    <button @click="testFunction" class="btn btn-success flex-grow-1 w-100">TEST</button>
+                                    -->
                                 </div>
                             </div>
                         </div>
@@ -1345,8 +1346,7 @@ methods: {
                                 </div>
                             </div>
                         </div>
-
-                        {{ rivalsQuantity }} {{ playerIndex }} {{ game.check_status }} {{ rivals }} {{ table.status }} {{table.players}}
+                        
                     </div>
                 </div>
             </div>            

@@ -22,6 +22,9 @@ import Sandbox from '../components/Sandbox.vue'
 //import PaypalDonation from '../components/PaypalDonation.vue'
 import SupportPage from '../components/SupportPage.vue'
 import TermsPage from '../components/TermsPage.vue'
+import TokenPage from '@/components/TokenPage.vue'
+import PrivacyPolicyPage from '@/components/PrivacyPolicyPage.vue'
+import AppRecovery from '@/components/AppRecovery.vue'
 
 // import Donation_Page from './components/DonationPage.vue'
 
@@ -31,6 +34,7 @@ const router = createRouter({
     { path: '/signup', component: AppSignup },
     { path: '/signup/:signupArgument', component: AppSignup, props: true },
     { path: '/login', component: AppLogin },
+    { path: '/recovery', component: AppRecovery },
     { path: '/access_denied', component: AccessDeniedPage },
     { path: '/create_table', component: CreateTable, name: 'CreateTable' },
     { path: '/rules', component: GameRulesPage },
@@ -49,6 +53,8 @@ const router = createRouter({
     //{ path: '/paypal', component: PaypalDonation, name: 'PaypalDonation' },
     { path: '/support', component: SupportPage, name: 'SupportPage' },
     { path: '/terms', component: TermsPage, name: 'TermsPage' },
+    { path: '/token', component: TokenPage, name: 'TokenPage' },
+    { path: '/privacy_policy', component: PrivacyPolicyPage, name: 'PrivacyPolicyPage' },
     { path: '/:catchAll(.*)', redirect: '/404' }
     
    ],

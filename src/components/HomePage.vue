@@ -98,7 +98,7 @@
     <div v-else class="custom-container">
       <div v-for="article in articles" :key="article.pk">
         <h2 >{{ article.fields.title }}</h2>
-        {{ getArticleImage(article.fields.image) }}
+      
         <img :src="getArticleImage(article.fields.image)" alt="Article Image" class="img-container rounded-3 mb-3 mt-1">
         <p style="text-align: justify"><b>{{ article.fields.subtitle }}</b></p>
         <p v-html="article.fields.text" style="text-align: justify;"></p>

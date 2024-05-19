@@ -78,9 +78,14 @@ export default {
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
     }    
     this.$socket.on('update_tables_hall_data', (data) => {
-      console.log('TABLES HALL - Socket.ON: update_tables_hall_data')
+      console.log('TABLES HALL - Socket.ON: update_tables_hall_data');
       this.updateTablesData(data);
     });
+
+    this.$socket.on('update_test_connection', (data) => {
+      console.log('TABLES HALL - Socket.ON: UPDATE TEST CONNECTION - ', data);
+    });
+    
     this.$socket.on('join_table_response', (data) => {
       this.joinTableResponse(data);
     });
@@ -201,6 +206,8 @@ export default {
     goTrainingRequest() {
       if (this.userData.active_table === 0 || this.userData.active_table === -1) {
         this.$socket.emit('join_sandbox_outside', { user_id: this.userData.user_id });
+      } else if (this.userData.active_table === -2) {
+        this.$router.push(`/sandbox/`);
       } else if (this.userData.active_table > 0) {
         this.setGlobalError(702);
         this.setGlobalModalErrorOn();
@@ -290,7 +297,12 @@ export default {
     createTable() {    
       console.log('TABLES HALL - Create table');
       this.$router.push(`/create_table/`);
+    },
+
+    testSocket() {
+      this.$socket.emit('test_connection', { user_id: this.userData.user_id });
     }
+
   },
 
 }
@@ -419,7 +431,7 @@ export default {
               <!-- Кнопка сортировки столов по table.id -->
               <div class="my-3 d-flex justify-content-center" style="justify-content: center; width: 100%;">
                 <h5 style="cursor: default">{{ interfaceData.sort_by }}</h5>
-              </div>
+              </div>              
               <div class="my-2 d-flex justify-content-center" style="width: 100%;">
                 <div class="d-flex justify-content-center" style="width: 80%;">
                   <input @click="sortTables('id')" type="submit" class="btn btn btn-outline-success btn-sm flex-grow-1" :value="interfaceData.table_id" :title="interfaceData.hint_table_id">
@@ -580,7 +592,7 @@ export default {
             <p class="lead mt-2">{{ interfaceData.empty_hall_text }}</p>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
               <button @click="createTable" :title="interfaceData.hint_create_table" type="button" class="btn btn-success btn-lg px-4 me-md-2 fw-bold">{{ interfaceData.create_table }}</button>
-              <button @click="goTrainingRequest" :title="interfaceData.hint_training" type="button" class="btn btn-outline-success btn-lg px-4">{{ interfaceData.training }}</button>
+              <button @click="goTrainingRequest" :title="interfaceData.hint_training" type="button" class="btn btn-outline-success btn-lg px-4">{{ interfaceData.training }}</button>              
             </div>
           </div>
 

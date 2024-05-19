@@ -4,7 +4,7 @@
   import { mapGetters } from 'vuex';
 
   export default {
-    name: 'SupportPage',
+    name: 'PrivacyPolicyPage',
 
     computed: {
       ...mapGetters(['getCurrentLanguage']),
@@ -49,7 +49,8 @@
 
       async getPageData(languageId) {
         try {
-          const response = await axios.get(`${serverUrl}/api/get_supportpage_data/${languageId}`);
+
+          const response = await axios.get(`${serverUrl}/api/get_privacypolicypage_data/${languageId}`);
           this.pageData = response.data;
           if (this.pageData.result) {
             this.articles = JSON.parse(this.pageData.articles);
@@ -99,7 +100,7 @@
       <div v-for="article in articles" :key="article.pk">
         <h2 >{{ article.fields.title }}</h2>        
         <img v-if="article.fields.image != null && article.fields.image !=''" :src="getArticleImage(article.fields.image)" alt="Article Image" class="img-container rounded-3 mb-3 mt-1">        
-        <p style="text-align: justify"><b>{{ article.fields.subtitle }}</b></p>
+        <b><p v-html="article.fields.subtitle" style="text-align: justify"></p></b>
         <p v-html="article.fields.text" style="text-align: justify;"></p>
         <br>
       </div>

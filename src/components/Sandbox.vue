@@ -40,12 +40,13 @@ export default {
     data() {
         return {
             interfaceData: {
-                "table" : "Table #",
+                "table" : "Sandbox",
                 "game": "Game #",
                 "game_notstarted": "The game has not started",
                 "button_leavetable": "Leave table",
                 "ante": "Ante:",
-                "max_players": "Max players:",
+                "min_bet": "Minimal bet:",
+                "max_players": "Players quantity:",
                 "blindgame": "Blind game:",
                 "cointype": "Coin type:",
                 "dropsuit": "Dropped:",
@@ -54,7 +55,7 @@ export default {
                 "blindgame_false": "disabled",
                 "cointype_demo": "Demo Coin",
                 "array_dropsuit": ["None", "Spades", "Clubs", "Diamonds", "Hearts"],
-                "gamestages": ["Not started", "Ante betting", "Blind betting", "Dealing", "First turn betting", "Discard extra card", "First turn", "Second turn", "Third turn", "Winner checking", "Waiting for players to AZI joining", "All check - Re-dealing", "End of the Game"],
+                "gamestages": ["Not started", "Ante betting", "Blind betting", "Dealing", "First turn betting", "Discard extra card", "First turn", "Second turn", "Third turn", "Draw over", "Waiting for players to AZI joining", "All check - Re-dealing", "Waiting for the new Game"],
                 "button_bet": "Bet",
                 "button_raise": "Raise",
                 "button_call": "Call",
@@ -64,11 +65,12 @@ export default {
                 "button_azi_refuse": "Refuse AZI",
                 "button_blind": "Blind bet",
                 "button_blind_off": "Without blind bet",
-                "button_gameready": "Ready for the new game",
+                "button_newgame": "Start the new game",
                 "button_gamerefuse": "Leave table",
+                "button_gotorules": "Game rules",
                 "drop_your_card": "Drop one of your cards",
                 "hint_attacker": "Attacker player",
-                "desk_pot": "POT",
+                "desk_pot": "POT:",
                 "desk_trump": "TRUMP",
                 "hint_timeout": "The action must be performed by the user before the timeout expires, otherwise the default automatic action will be performed",
                 "badge_game": "game# ",
@@ -78,7 +80,19 @@ export default {
                 "badge_azi_out": "AZI-out",
                 "badge_azi_burst": "AZI burst in",
                 "badge_azi_refuse": "Refused to AZI",
-                "balance": ["Silvercoin balance: ", "Goldcoin balance: ", "Bonuscoin balance: "]
+                "balance": "Democoin balance: ",
+                "button_no_balance": "Not enough coins",
+                "button_push_balance": "Top up your account",
+                "usersays": ["", "Ante betting: ", "Bet: ", "TOP bet: ", "Blind bet: ", "TOP blind bet: ", "Raise: ",  "Check", "Call: ", "Fold", "Out of coins, fold", "Burst into AZI: ", "Refuse of AZI", "Out of coins", "Without blind bet", "TOP Raise:"],
+                "blind_bet_button": ["Bet:", "Call:"],
+                "your_turn": "Your turn",
+                "your_word": "Your turn",
+                "dealer": "Dealer",
+                "button_change_rivals": "Change rivals",
+                "button_close_table": "Close table",
+                "hint_close_table": "When this button is pressed, the game will be interrupted and the table will be closed. Current game data will not be saved",
+                "game_on": "The game is on",
+                "game_off": "The game has not started"
             },
             globalInterfaceData: [],
             user: {},
@@ -338,6 +352,11 @@ export default {
         leaveTable() {        
             this.$socket.emit('leave_sandbox', { user_id: this.userData.user_id });
             console.log('LEAVE SANDBOX');
+        },
+
+        closeTable() {        
+            this.$socket.emit('close_sandbox', { user_id: this.userData.user_id });
+            console.log('CLOSE SANDBOX');
         },
 
         updateTableData(data) {
@@ -1265,14 +1284,13 @@ export default {
                             <div class="col-7 d-flex align-items-center">
                                 <div class="my-1" style="width: 100%;">                                    
                                     <h5>{{ interfaceData.table }}</h5>
-                                    <h6 v-if="game.stage !== 0">{{ interfaceData.game }} {{ game.stage }}</h6>
-                                    <h6 v-else>{{ interfaceData.game_notstarted }}</h6>
+                                    <h6 v-if="game.stage !== 0 && game.stage !== 12">{{ interfaceData.game_on }}</h6>
+                                    <h6 v-else>{{ interfaceData.game_off }}</h6>
                                 </div>
                             </div>
                             <div class="col-5 d-flex justify-content-center align-items-center">
                                 <div class="d-flex flex-grow-1" style="width: 100%;">
-                                    <button @click="leaveTable" class="btn btn-danger flex-grow-1 w-100">{{ interfaceData.button_leavetable }}</button>
-                                    <button @click="testFunction" class="btn btn-success flex-grow-1 w-100">TEST</button>
+                                    <button @click="closeTable" class="btn btn-danger flex-grow-1 w-100" :title="interfaceData.hint_close_table">{{ interfaceData.button_close_table }}</button>                                    
                                 </div>
                             </div>
                         </div>
