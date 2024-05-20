@@ -13,7 +13,7 @@ import io from 'socket.io-client';
 
 const app = createApp(App)
 
-export const serverUrl = 'http://localhost:8000'
+export const serverUrl = 'https://azi-online.com:8000'
 
 let serverMailData = '@users.azi-online.com';
 let paypalClientIdData = 'ATVtjFAQiW84uJSCELJDy89J8MA-u6ldK_k9FlSqkXcuDad7DRfi3L9DBFxbL5O9RWyujt5VOnqWWZuh';
