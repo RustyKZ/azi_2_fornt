@@ -66,7 +66,7 @@ export default new Vuex.Store({
       commit('setCurrentLanguage', newLanguage);
     },
     setGlobalError({ commit }, newNumber) {
-      console.log('VUEX: SET GLOBAL ERROR NEW NUMBER - ', newNumber)
+      // console.log('VUEX: SET GLOBAL ERROR NEW NUMBER - ', newNumber)
       commit('setGlobalErrorNumber', newNumber);
     },
     changeStatusLoggedIn({ commit }) {
@@ -87,11 +87,11 @@ export default new Vuex.Store({
       commit('setStatusWeb3Out');
     },
     setGlobalModalErrorOn({ commit }) {
-      console.log('VUEX: setGlobalModalErrorOn')
+      //console.log('VUEX: setGlobalModalErrorOn')
       commit('setGlobalModalErrorTrue');
     },
     setGlobalModalErrorOff({ commit }) {
-      console.log('VUEX: setGlobalModalErrorOff')
+      //console.log('VUEX: setGlobalModalErrorOff')
       commit('setGlobalModalErrorFalse');
     },
     setUser({ commit }, user) {

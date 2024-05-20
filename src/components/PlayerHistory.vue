@@ -63,7 +63,7 @@ export default {
     },
     cointype() {
       this.cointypeInt = parseInt(this.cointype)
-      console.log('NEW COINTYPE IS ', this.cointypeInt);
+      //console.log('NEW COINTYPE IS ', this.cointypeInt);
     }
   
   },
@@ -105,7 +105,7 @@ export default {
 
   async created() {    
     await this.getInterface();
-    console.log('PLAYER HISTORY CREATED: this userroute is ', this.userId, ' this User is ', this.userData.user_id);
+    //console.log('PLAYER HISTORY CREATED: this userroute is ', this.userId, ' this User is ', this.userData.user_id);
     if (this.userId !== this.userData.user_id) {
       this.goToAccessDenied();
     }
@@ -115,7 +115,7 @@ export default {
   async mounted() {
     const getUserData = await email_check_auth();    
     if (!getUserData['is_auth']) {
-      console.log('PLAYER HISTORY AccessDenied')
+      //console.log('PLAYER HISTORY AccessDenied');
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
     }
     this.userData = getUserData;
@@ -190,7 +190,7 @@ export default {
     },
 
     commentUnroll(Step) {
-      console.log('COMMENT UNROLL ', Step)
+      //console.log('COMMENT UNROLL ', Step);
       this.userReview.forEach((comment, index) => {
         if (index === Step) {
             comment.unrolled = true;
@@ -205,7 +205,7 @@ export default {
     },
 
     commentRoll(Step) {
-      console.log('COMMENT ROLL ', Step)
+      //console.log('COMMENT ROLL ', Step);
       this.userReview[Step].unrolled = false;
     },
 

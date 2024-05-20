@@ -193,19 +193,11 @@ async created() {
     });
     this.startProgressBar();    
     this.$socket.emit('join_table_inside', { user_id: this.userData.user_id, table_id: this.tableId });
-    console.log('CREATED: Image ', this.cardImg)
+    // console.log('CREATED: Image ', this.cardImg)
 },
 
 async mounted() {
-    console.log('GAME TABLE MOUNTED');
-    //const img = new Image();
-    // Устанавливаем путь к изображению
-    //img.src = this.cardImgSrc;
-    // Устанавливаем изображение в переменную cardImg после его загрузки
-    //img.onload = () => {
-    //    this.cardImg = img;
-    //    console.log('Mounted: ONload Image ', this.cardImg)
-    //};
+
     this.cardImg = this.$refs.card_shirt;
     this.$socket.on('update_table_data', (data) => {
         this.updateTableData(data);
@@ -222,12 +214,12 @@ async mounted() {
 },
 
 beforeRouteLeave(to, from, next) {
-    console.log('Пользователь покидает страницу');
+    // console.log('Пользователь покидает страницу');
     next();
 },
 
 beforeUnmount () {
-    console.log('BEFORE DESTROY')
+    // console.log('BEFORE DESTROY')
     clearInterval(this.timer)
 },
 
@@ -238,7 +230,7 @@ methods: {
       this.userId = this.$route.params.user_id;
       try {        
         const response = await axios.get(`${serverUrl}/api/get_playtable_interface`);
-        console.log('PLAYTABLE GET INTERFACE response :', response);
+        // console.log('PLAYTABLE GET INTERFACE response :', response);
         try {
           this.globalInterfaceData = response.data
           if (response.data[this.getCurrentLanguage-1]['label']) {
@@ -281,7 +273,7 @@ methods: {
 
     leaveTable() {        
         this.$socket.emit('leave_table', { user_id: this.userData.user_id, table_id: this.tableId });
-        console.log('PLAYING TABLE - LEAVE TABLE');
+        // console.log('PLAYING TABLE - LEAVE TABLE');
     },
 
     updateTableDataCards(data) {
@@ -310,9 +302,6 @@ methods: {
                         {pos: 2, card: 0, name: 'myCard3', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
                         {pos: 3, card: 0, name: 'myCard4', image: '/images/cards/220-empty.png', type: 'card', opacity: 'opacity: 100%'},
                     ]
-                } else {
-                    console.log('')
-                    // this.$socket.emit('get_my_cards', { user_id: this.userData.user_id, game_id: this.game.id });
                 }
             }
             if (data.turn_player_index !== null && data.turn_player_index !== undefined && data.turn_player_index !== this.playerIndex && data.turn_player_index >= 0 && data.turn_player_index <=5) {                
@@ -340,7 +329,7 @@ methods: {
     },
 
     updateRivals() {
-        // console.log('CREATE RIVALS ', this.table.players, this.table.max_players, this.getUser.id)
+        // // console.log('CREATE RIVALS ', this.table.players, this.table.max_players, this.getUser.id)
         const rivals = [];
         let rivalsQuantity = 0;
 
@@ -376,7 +365,7 @@ methods: {
                 if (data.error !== 708) {
                     this.setGlobalError(data.error);
                     this.setGlobalModalErrorOn();
-                    console.log('GET PRIVATE NOTICE - DATA: ', data)
+                    // console.log('GET PRIVATE NOTICE - DATA: ', data)
                 }
                 if (data.error === 712) {
                     this.stopProgressBar();
@@ -388,9 +377,7 @@ methods: {
                     this.setGlobalModalErrorOn();
                 }
             }
-        } else {
-            console.log('GET PRIVATE NOTICE - DATA: ', data);
-        }
+        } 
     },
 
     updateUserCards(data) {
@@ -398,7 +385,7 @@ methods: {
             if (data.error !== 708) {
                 this.setGlobalError(data.error);
                 this.setGlobalModalErrorOn();
-                console.log('UPDATE USER CARDS - DATA: ', data);
+                // console.log('UPDATE USER CARDS - DATA: ', data);
             }            
         } else {
             const myCardsArray = data.cards
@@ -408,7 +395,7 @@ methods: {
                 this.myCards[n].card = card // Присваиваем ключу card значение myCards[n]
                 this.myCards[n].image = '/images/cards/220-cads-deck' + strCard + '.png'; // Присваиваем ключу image значение '/images/cards/220-cads-deck{strCard}.png'
             }
-            console.log('UPDATE USER CARDS - DATA: ', myCardsArray);
+            // console.log('UPDATE USER CARDS - DATA: ', myCardsArray);
         }
     },
 
@@ -461,12 +448,12 @@ methods: {
     startDrag(event, item) {
     // Начало перетаскивания
         event.dataTransfer.setData('text/plain', JSON.stringify(item));
-        console.log('CARD DRAGGED:', item);
+        // console.log('CARD DRAGGED:', item);
         this.myCards[item.pos]['opacity'] = 'opacity: 50%';
     },
     cancelDrag(event) {
         event.preventDefault();
-        console.log('CANCEL DRAG')
+        // console.log('CANCEL DRAG')
         this.myCards.forEach(card => {
             card.opacity = 'opacity: 100%';
         });
@@ -477,20 +464,20 @@ methods: {
         try {
             const item = JSON.parse(event.dataTransfer.getData('text/plain'));
             if (item.type === 'card') {
-                // console.log('CARD VALID DROPPED:', item.pos, item.card);
+                // // console.log('CARD VALID DROPPED:', item.pos, item.card);
                 const droppedCard = {
                     user_id: this.getUser.id,
                     game_id: this.game.id,
                     card_pos: item.pos,
                     card_value: item.card
                 }
-                console.log('DROP CARD: ', droppedCard);
+                // console.log('DROP CARD: ', droppedCard);
                 if (this.game.stage < 5) {
                     this.setGlobalError(713);
                     this.setGlobalModalErrorOn();
                 }
                 const emptyCards = this.myCards.filter(item => item.card === 0);
-                console.log('EMPTY CARDS IS ', emptyCards.length);
+                // console.log('EMPTY CARDS IS ', emptyCards.length);
                 if (this.game.stage === 5) {
                     if (emptyCards.length > 0) {
                         this.setGlobalError(714);
@@ -534,42 +521,42 @@ methods: {
                 }                
             }
         } catch (error) {   
-            console.log('CARD INVALID DROPPED:');
+            console.error('CARD INVALID DROPPED:', error);
         }
     },
 
     bettingRaise(raise_bet) {
-        console.log('BETTING RAISE: bet is ', raise_bet);
+        // console.log('BETTING RAISE: bet is ', raise_bet);
         let int_bet = parseInt(raise_bet, 10);
         if (isNaN(int_bet)) {
             int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
         }
         this.$socket.emit('user_raise', { user_id: this.userData.user_id, table_id: this.tableId, raise_bet: int_bet });
-        console.log('BETTING RAISE: bet is ', int_bet)
+        // console.log('BETTING RAISE: bet is ', int_bet)
     },
 
     bettingBet(bet) {
-        console.log('BETTING BET: bet is ', bet)
+        // console.log('BETTING BET: bet is ', bet)
         let int_bet = parseInt(bet, 10);
         if (isNaN(int_bet)) {
             int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
         }        
         this.$socket.emit('user_bet', { user_id: this.userData.user_id, table_id: this.tableId, bet: int_bet });
-        console.log('BETTING BLIND BET: bet is ', int_bet)
+        // console.log('BETTING BLIND BET: bet is ', int_bet)
     },
 
     bettingCall() {
-        console.log('BETTING call')        
+        // console.log('BETTING call')        
         this.$socket.emit('user_call', { user_id: this.userData.user_id, table_id: this.tableId});
     },
 
     bettingFold() {
-        console.log('BETTING FOLD')
+        // console.log('BETTING FOLD')
         this.$socket.emit('user_fold', { user_id: this.userData.user_id, table_id: this.tableId});
     },
 
     bettingCheck() {
-        console.log('BETTING CHECK');
+        // console.log('BETTING CHECK');
         this.$socket.emit('user_check', { user_id: this.userData.user_id, table_id: this.tableId});
     },
 
@@ -579,33 +566,33 @@ methods: {
             int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
         }        
         this.$socket.emit('user_blind_bet', { user_id: this.userData.user_id, table_id: this.tableId, blind_bet: int_bet });
-        console.log('BETTING BLIND BET: bet is ', int_bet)
+        // console.log('BETTING BLIND BET: bet is ', int_bet)
     },
 
     bettingBlindCheck() {
         this.$socket.emit('user_blind_check', { user_id: this.userData.user_id, table_id: this.tableId });
-        console.log('BETTING BLIND CHECK')
+        // console.log('BETTING BLIND CHECK')
     },
 
     bettingAziHalfPot() {
         this.$socket.emit('user_azi_burst', { user_id: this.userData.user_id, game_id: this.game.id });
-        console.log('BETTING AZI HALF POT')
+        // console.log('BETTING AZI HALF POT')
     },
 
     bettingAziDecline() {
         this.$socket.emit('user_azi_refuse', { user_id: this.userData.user_id, game_id: this.game.id });
-        console.log('BETTING AZI DECLINE')
+        // console.log('BETTING AZI DECLINE')
     },
 
     readyForNewGame() {
         this.$socket.emit('player_ready_for_the_new_game', { user_id: this.userData.user_id, table_id: this.tableId });
-        console.log('READY FOR THE NEW GAME')
+        // console.log('READY FOR THE NEW GAME')
     },
 
     startProgressBar() {
         if (!this.progressBarRunning) {
             this.timer = setInterval(() => {
-                // console.log('PROGRESSBAR STARTED, timer is', this.timer, '  time elapsed ', this.progressElapsed)
+                // // console.log('PROGRESSBAR STARTED, timer is', this.timer, '  time elapsed ', this.progressElapsed)
                 // Рассчитываем, сколько времени прошло с момента lastdeal до текущего момента
                 const currentTime = Math.floor(new Date().getTime() / 1000); // Текущее время в секундах
                 if (this.table.lastdeal !== 0) {
@@ -631,14 +618,14 @@ methods: {
     },
 
     async stopProgressBar() {
-        console.log('PROGRESSBAR STOPPED, time elapsed ', this.progressElapsed)
+        // console.log('PROGRESSBAR STOPPED, time elapsed ', this.progressElapsed)
         clearInterval(this.timer);
         this.progressBarRunning = false;
         this.timer = null;
     },
 
     defaultAction() {
-        console.log('DEFAULT ACTION')
+        // console.log('DEFAULT ACTION')
         if (!this.defaultActionRequestSent) {
             this.defaultActionRequestSent = true;
             this.$socket.emit('default_action', { user_id: this.userData.user_id, table_id: this.tableId });
@@ -652,18 +639,18 @@ methods: {
     },
 
     checkPlayerIsAlone() {
-        // console.log('CHECK PLAYER IS ALONE', this.table.players, this.table.status, this.table.max_players)
+        // // console.log('CHECK PLAYER IS ALONE', this.table.players, this.table.status, this.table.max_players)
         try {
             const arrayPlayers = this.table['players'].slice(0, this.table.max_players);
             const arrayStatus = this.table['status'].slice(0, this.table.max_players);
-            // console.log('CHECK PLAYER IS ALONE - TRY')
+            // // console.log('CHECK PLAYER IS ALONE - TRY')
             if (arrayPlayers.filter(item => item === 0).length + arrayStatus.filter(item => item === 12).length === this.table.max_players - 1) {
                 this.playerIsAlone = true;
             } else {
                 this.playerIsAlone = false;
             }
         } catch {
-            console.log('CHECK PLAYER IS ALONE - CATCH')
+            // console.log('CHECK PLAYER IS ALONE - CATCH')
             this.playerIsAlone = true;
         }
     },
@@ -700,37 +687,35 @@ methods: {
     
     dealCard(dealIndex) {
         try {
-        // Получаем элементы DOM
-        const card = this.$refs.card_shirt;
-        // console.log('DEAL CARD start: ', card)
-        if (card != null) {
-            // console.log('DEAL CARD INSIDE: ', card)
-            const deck = document.getElementById('deck');
-            const destination = document.getElementById('destination_' + dealIndex);
-            // Устанавливаем начальное положение карты над колодой
-            card.style.height = '15vh';
-            card.style.opacity = '1';
-            card.style.display = 'block';
-            card.style.left = deck.offsetLeft + 'px';
-            card.style.top = deck.offsetTop + 'px';
-            // Анимируем перемещение карты к месту назначения
-            const destinationLeft = destination.offsetLeft;
-            const destinationTop = destination.offsetTop;
-            const animation = card.animate(
-                [
-                    { transform: `translate(0px, 0px)` },
-                    { transform: `translate(${destinationLeft - deck.offsetLeft}px, ${destinationTop - deck.offsetTop}px)` }
-                ],
-                { duration: 200, easing: 'ease-in-out'}
-            );
-            // По завершению анимации скрываем карту
-            animation.onfinish = () => {
-                card.style.opacity = '0';
-                // console.log('DEAL CARD - ANIMATION')
+            // Получаем элементы DOM
+            const card = this.$refs.card_shirt;
+            // // console.log('DEAL CARD start: ', card)
+            if (card != null) {
+                // // console.log('DEAL CARD INSIDE: ', card)
+                const deck = document.getElementById('deck');
+                const destination = document.getElementById('destination_' + dealIndex);
+                // Устанавливаем начальное положение карты над колодой
+                card.style.height = '15vh';
+                card.style.opacity = '1';
+                card.style.display = 'block';
+                card.style.left = deck.offsetLeft + 'px';
+                card.style.top = deck.offsetTop + 'px';
+                // Анимируем перемещение карты к месту назначения
+                const destinationLeft = destination.offsetLeft;
+                const destinationTop = destination.offsetTop;
+                const animation = card.animate(
+                    [
+                        { transform: `translate(0px, 0px)` },
+                        { transform: `translate(${destinationLeft - deck.offsetLeft}px, ${destinationTop - deck.offsetTop}px)` }
+                    ],
+                    { duration: 200, easing: 'ease-in-out'}
+                );
+                // По завершению анимации скрываем карту
+                animation.onfinish = () => {
+                    card.style.opacity = '0';
+                    // // console.log('DEAL CARD - ANIMATION')
+                }
             }
-        } else {
-            // console.log('DEAL CARD - ANIMATION ERROR')
-        }
         } catch {
             console.error('Deal card - Animation error...')
         }

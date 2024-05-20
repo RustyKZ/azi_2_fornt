@@ -51,7 +51,7 @@
     async created() {      
       const userData = await email_check_auth();    
       if (userData['is_auth']) {
-        console.log('RECOVERY PAGE - AccessDenied')
+        //console.log('RECOVERY PAGE - AccessDenied');
         this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
       }
       await this.getInterface();      
@@ -125,7 +125,7 @@
       },
 
       async getCode() {
-        console.log('GET CODE');
+        //console.log('GET CODE');
         try {
           const ip_address = await get_ip_address();
           const dataToSend = {
@@ -136,7 +136,7 @@
           this.setGlobalModalErrorOn();
           const response = await axios.post(`${serverUrl}/api/user_password_reset`, dataToSend);
           if (response.data['result']) {
-            console.log('RESET PASSWORD CODE response: ', response.data);
+            //console.log('RESET PASSWORD CODE response: ', response.data);
             this.user_data.reset_time = response.data['reset_time'];
             this.user_data.reset_try = response.data['reset_try'];
             this.setGlobalError(491);
@@ -154,7 +154,7 @@
       },
 
       async sendCode() {
-        console.log('SEND CODE');
+        //console.log('SEND CODE');
         try {
           const ip_address = await get_ip_address();
           const dataToSend = {
@@ -164,7 +164,7 @@
           }
           const response = await axios.post(`${serverUrl}/api/user_password_reset_code`, dataToSend);
           if (response.data['result']) {
-            console.log('RESET PASSWORD RESET CODE response: ', response.data);
+            //console.log('RESET PASSWORD RESET CODE response: ', response.data);
             this.user_data.reset_time = response.data['reset_time'];
             this.user_data.reset_try = response.data['reset_try'];
             this.stopTimer();
@@ -196,7 +196,7 @@
       },
 
       async setPassword() {
-        console.log('SET PASSWORD');
+        //console.log('SET PASSWORD');
         try {
           if (this.user_data.password !== this.user_data.repassword) {
             this.setGlobalError(462);
@@ -213,7 +213,7 @@
             }
             const response = await axios.post(`${serverUrl}/api/user_password_reset_password`, dataToSend);
             if (response.data['result']) {
-              console.log('RESET PASSWORD RESET CODE response: ', response.data);
+              //console.log('RESET PASSWORD RESET CODE response: ', response.data);
               this.setGlobalError(494);
               this.setGlobalModalErrorOn();
               this.stopTimer();

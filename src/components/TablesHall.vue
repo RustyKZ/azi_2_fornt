@@ -74,16 +74,11 @@ export default {
     const getUserData = await email_check_auth();
     this.userData = getUserData;
     if (!this.userData['is_auth']) {
-      console.log('PLAYER PROFILE AccessDenied')
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
     }    
     this.$socket.on('update_tables_hall_data', (data) => {
-      console.log('TABLES HALL - Socket.ON: update_tables_hall_data');
+      // console.log('TABLES HALL - Socket.ON: update_tables_hall_data');
       this.updateTablesData(data);
-    });
-
-    this.$socket.on('update_test_connection', (data) => {
-      console.log('TABLES HALL - Socket.ON: UPDATE TEST CONNECTION - ', data);
     });
     
     this.$socket.on('join_table_response', (data) => {
@@ -99,8 +94,7 @@ export default {
   },
 
   beforeRouteLeave(to, from, next) {
-    this.$socket.emit('leave_tables_hall', { user_id: this.userData.user_id });
-    console.log('Пользователь покидает страницу');
+    this.$socket.emit('leave_tables_hall', { user_id: this.userData.user_id });    
     this.$store.commit('setActiveTable', this.userData.active_table);
     next();
   },
@@ -112,17 +106,13 @@ export default {
         if (data.status) {
             if (data.error == 712) {
                 this.setGlobalError(data.error);
-                this.setGlobalModalErrorOn();
-                console.log('GET PRIVATE NOTICE - DATA: ', data)
+                this.setGlobalModalErrorOn();                
             }            
-        } else {
-            console.log('GET PRIVATE NOTICE - DATA: ', data);
         }
     },
     
     joinTablesHall() {      
       this.$socket.emit('join_tables_hall', { user_id: this.userData.user_id });
-      console.log(`TABLES HALL JOIN ROOM: User ${this.userData.django_name} joined to TABLES HALL`);
     },
 
     async getInterface() {      
@@ -159,8 +149,7 @@ export default {
       this.$router.push(`/profile/${user_id}`);
     },
 
-    updateTablesData(data) {      
-      console.log('UPDATE TABLES DATA: ', data);
+    updateTablesData(data) {
       this.all_users = data.all_players;
       this.all_users.forEach(user => {
         if (user.id === this.userData.user_id) {
@@ -215,7 +204,7 @@ export default {
     },
 
     goTrainingResponse(data) {      
-      console.log('GO TRAINING RESPONSE: ', data);      
+      // console.log('GO TRAINING RESPONSE: ', data);
       if (data.status) {
         this.$router.push(`/sandbox/`);
       } else {
@@ -228,9 +217,9 @@ export default {
       if (this.userData.active_table === 0 || this.userData.active_table === -1 || this.userData.active_table === -2) {
         if (!table_protected) {
           this.$socket.emit('join_table_outside', { user_id: this.userData.user_id, table_id: table_id, table_password: '' });
-          console.log('JOIN TABLE : user ', this.userData.user_id, ' table ', table_id)
+          // console.log('JOIN TABLE : user ', this.userData.user_id, ' table ', table_id)
         } else {          
-          console.log('JOIN TABLE : need password - password is ', this.enteredTablePassword);
+          // console.log('JOIN TABLE : need password - password is ', this.enteredTablePassword);
           this.$socket.emit('join_table_outside', { user_id: this.userData.user_id, table_id: table_id, table_password: this.enteredTablePassword});
           this.enteredTablePassword = '';          
           this.tables.forEach(table => {
@@ -249,7 +238,7 @@ export default {
     },    
 
     joinTableResponse(data) {      
-      console.log('JOIN TABLE RESPONSE: ', data);      
+      // console.log('JOIN TABLE RESPONSE: ', data);      
       if (data.status) {
         const goalTable = data.table;
         this.$router.push(`/table/${goalTable.id}`);
@@ -290,12 +279,12 @@ export default {
     },
 
     training() {
-      console.log('TABLES HALL - Training');
+      // console.log('TABLES HALL - Training');
       this.$router.push(`/sandbox/`);
     },
 
     createTable() {    
-      console.log('TABLES HALL - Create table');
+      // console.log('TABLES HALL - Create table');
       this.$router.push(`/create_table/`);
     },
 

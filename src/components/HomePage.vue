@@ -38,7 +38,7 @@
           this.formData = response.data;
           this.noContentMessage = this.formData[this.getCurrentLanguage-1].form.no_content;
           this.noContentHeader = this.formData[this.getCurrentLanguage-1].form.notice;
-          console.log('HOMEPAGE - FORM: ', this.formData);
+          //console.log('HOMEPAGE - FORM: ', this.formData);
         } catch (error) {
           console.error('HOMEPAGE - Error fetching API Form:', error);
         }
@@ -50,10 +50,10 @@
           this.homepageData = response.data;
           if (this.homepageData.result) {
             this.articles = JSON.parse(this.homepageData.articles);
-            console.log('HOMEPAGE - DATA: ', this.homepageData);
+            //console.log('HOMEPAGE - DATA: ', this.homepageData);
           } else {
             this.noContent = true;
-            console.log('HOMEPAGE - DATA: ', this.homepageData);
+            //console.log('HOMEPAGE - DATA: ', this.homepageData);
           }          
         } catch (error) {
           this.noContent = true;

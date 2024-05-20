@@ -7,7 +7,7 @@ import store from './storage';
 export async function walletConnect(refCode, language) {
     try {
         const response = await axios.get(`${serverUrl}/api/get_token_settings`);
-        console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
+        //console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
         if (response.data['status']) {
             const tokenContractAddress = response.data.token['contract'];
             if (typeof window.ethereum !== 'undefined') {
@@ -39,7 +39,7 @@ export async function walletConnect(refCode, language) {
                             userAddress, // адрес для подписи
                             '' // пароль кошелька (может быть пустым, если кошелек разблокирован)
                         );
-                        console.log('Signed:',dataToSign)
+                        //console.log('Signed:',dataToSign)
                         const dataToSend = {
                             userAddress: userAddress,
                             tokenBalance: balance.toString(),
@@ -48,12 +48,12 @@ export async function walletConnect(refCode, language) {
                             ip_address: ip_address,
                             language: language
                         };
-                        console.log(dataToSend);
-                        console.log(`WALLET CONNECT: Request for ${serverUrl}/api/user_login_metamask`, dataToSend)
+                        //console.log(dataToSend);
+                        //console.log(`WALLET CONNECT: Request for ${serverUrl}/api/user_login_metamask`, dataToSend)
         
                         try {
                             const response = await axios.post(`${serverUrl}/api/user_login_metamask`, dataToSend);
-                            console.log('WALLET CONNECT - Server response:', response.data.message);
+                            //console.log('WALLET CONNECT - Server response:', response.data.message);
                             if (response.data['logged_in']) {
                                 localStorage.setItem('authToken', response.data['access_token']);
                                 store.dispatch('changeStatusLoggedIn');

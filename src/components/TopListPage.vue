@@ -41,7 +41,7 @@ export default {
     },
     cointype() {
       this.cointypeInt = parseInt(this.cointype)
-      console.log('NEW COINTYPE IS ', this.cointypeInt);
+      // console.log('NEW COINTYPE IS ', this.cointypeInt);
     }
   
   },
@@ -107,7 +107,7 @@ export default {
         const response = await axios.get(`${serverUrl}/api/get_toplist_data`);
         if (response.data['result'] ) {
           this.topListData = response.data['top_list'];          
-          console.log('TOPLIST PAGE - get toplist data', response);
+          // console.log('TOPLIST PAGE - get toplist data', response);
         } else {
           console.error('TOPLIST - get_toplist_data Error: - Bad responce');
           this.setGlobalError(465);

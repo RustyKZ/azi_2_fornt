@@ -41,9 +41,9 @@ export default {
   async created() {
     const userData = await email_check_auth();
     this.userId = this.$route.params.user_id;
-    console.log('PLAYER REVIEW is Auth after: ', userData);
+    //console.log('PLAYER REVIEW is Auth after: ', userData);
     if (!userData['is_auth']) {
-      console.log('PLAYER REVIEW AccessDenied')
+      //console.log('PLAYER REVIEW AccessDenied')
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
     }
     await this.fetchApiForm();
@@ -56,7 +56,7 @@ export default {
       this.userId = this.$route.params.user_id;
       try {        
         const response = await axios.get(`${serverUrl}/api/get_user_review_form`);
-        console.log('REVIEW PAGE GET FORM :', response);
+        //console.log('REVIEW PAGE GET FORM :', response);
         try {
           if (response.data[this.getCurrentLanguage-1]['label']) {
             this.formData = response.data[this.getCurrentLanguage-1]['form'];
@@ -82,7 +82,7 @@ export default {
             unrolled: false
           };
         });
-        console.log('USER REVIEW USER DATA - response: ', response.data);
+        //console.log('USER REVIEW USER DATA - response: ', response.data);
       } catch (error) {
         console.error('USER REVIEW USER DATA', error);
       }
@@ -112,7 +112,7 @@ export default {
     },
 
     commentUnroll(Step) {
-      console.log('COMMENT UNROLL ', Step)
+      //console.log('COMMENT UNROLL ', Step)
       this.userReview.forEach((comment, index) => {
         if (index === Step) {
             comment.unrolled = true;
@@ -127,7 +127,7 @@ export default {
     },
 
     commentRoll(Step) {
-      console.log('COMMENT ROLL ', Step)
+      //console.log('COMMENT ROLL ', Step)
       this.userReview[Step].unrolled = false;
     }
   }

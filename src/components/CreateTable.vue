@@ -142,7 +142,7 @@ export default {
         },
 
         newGameCreated(data) {            
-            console.log('NEW GAME CREATED', data);
+            //console.log('NEW GAME CREATED', data);
             const createdTable = data.table_created
             if (createdTable['status']) {                
                 this.$router.push(`/table/${createdTable['table_id']}`);

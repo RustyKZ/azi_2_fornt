@@ -24,7 +24,7 @@
     },
     
     mounted: async function() {
-      console.log('MOUNTED');
+      // console.log('MOUNTED');
     },
 
     computed: {
@@ -48,7 +48,7 @@
         try {
           const response = await axios.get(`${serverUrl}/api/get_header/${languageId}`);
           this.headerData = response.data;
-          console.log(response.data)
+          // console.log(response.data)
         } catch (error) {
           console.error('Error fetching API data:', error);
         }
@@ -99,20 +99,16 @@
           'token': localStorage.getItem('authToken')
         }
         try {
-          console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend)
+          // console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend);
           const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
           const dataResponse = response['data']
           if (dataResponse['status']) {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            // console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
             this.setGlobalError(1001);
             this.setAirdropCoins(dataResponse['airdrop']);
             this.setReferalCoins(dataResponse['referal']);
             this.setGlobalModalErrorOn();
-          } else {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
-            //this.setGlobalError(dataResponse['error']);  
-            //this.setGlobalModalErrorOn();
-          }
+          } 
         } catch(error) {
           console.error('Airdrop catch')
           this.setGlobalError(0);
@@ -121,12 +117,12 @@
       },
 
       async metamaskConnect() {
-        console.log('METAMASCT CONNECT');
+        //console.log('METAMASCT CONNECT');
         const walletStatus = await walletConnect('', this.getCurrentLanguage);
-        console.log('METAMASK CONNECT response: ', walletStatus);
+        //console.log('METAMASK CONNECT response: ', walletStatus);
         if (walletStatus.logged_in) {
           this.user_id = walletStatus.user_id;
-          console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
+          //console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
           this.changeLanguage(walletStatus.user_language);
           await this.getAirdropCoins();
           this.$router.push('/');
@@ -137,12 +133,12 @@
           } catch {
             this.setGlobalError(0);
           }
-          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          //console.log('METAMASK CONNECT ', walletStatus.logged_in);
         }
       },
       
       async metamaskDisonnect() {
-        console.log('METAMASCT DISCONNECT');
+        //console.log('METAMASCT DISCONNECT');
         await email_logout();
         this.$router.push('/');
       },

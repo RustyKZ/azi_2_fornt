@@ -112,16 +112,16 @@ export default {
   async created() {
     const userData = await email_check_auth();    
     if (!userData['is_auth']) {
-      console.log('PLAYER PROFILE AccessDenied')
+      //console.log('PLAYER PROFILE AccessDenied')
       this.goToAccessDenied(); // Переход на страницу доступа запрещен, если пользователь не авторизован
     }
     await this.fetchApiForm();
-    console.log('player profile - CREATED');
+    //console.log('player profile - CREATED');
     this.getUserProfile();
   },
 
   mounted() {
-    console.log('player profile - MOUNTED');
+    //console.log('player profile - MOUNTED');
 
   },
 
@@ -200,7 +200,7 @@ export default {
               this.startTimer();
             }          
           } else {
-            console.log('GET USER PORFILE - CLEAN INTERVAL')
+            //console.log('GET USER PORFILE - CLEAN INTERVAL')
             await this.stopTimer();
           }
         }        
@@ -248,7 +248,7 @@ export default {
               'token': localStorage.getItem('authToken')
             }
             const response = await axios.post(`${serverUrl}/api/change_user_nickname`, dataToSend);
-            console.log('CHANGE NICKNAME - response: ', response.data);
+            //console.log('CHANGE NICKNAME - response: ', response.data);
             if (response.data['result']) {
               await this.getUserProfile();
               this.$store.commit('setUser', {
@@ -258,11 +258,11 @@ export default {
                 active_table: this.user.active_table,
                 wallet: this.user.wallet
               });
-              console.log('CHANGE NICKNAME - response: SUCCESS');
+              //console.log('CHANGE NICKNAME - response: SUCCESS');
             } else {
               this.setGlobalError(response.data['code']);
               this.setGlobalModalErrorOn();
-              console.log('CHANGE NICKNAME - response: ERROR');
+              //console.log('CHANGE NICKNAME - response: ERROR');
             }          
           } catch (error) {
             this.setGlobalError(0);
@@ -270,8 +270,6 @@ export default {
             console.error('Error fetching API data:', error);
           }
         }
-      } else {
-        console.log('CHANGE NICKNAME - canceled ');
       }
       this.editingNickname = false;
     },
@@ -284,7 +282,7 @@ export default {
     },
 
     async confirmEmail() {
-      console.log('PLAYER PROFILE - Submit Email');
+      //console.log('PLAYER PROFILE - Submit Email');
       try {
         const dataToSend = {
           'user_id': this.userId,            
@@ -337,7 +335,7 @@ export default {
               'token': localStorage.getItem('authToken')
             }
             const response = await axios.post(`${serverUrl}/api/change_user_email`, dataToSend);
-            console.log('CHANGE EMAIL - response: ', response.data);
+            //console.log('CHANGE EMAIL - response: ', response.data);
             if (response.data['result']) {
               await this.getUserProfile();
               this.$store.commit('setUser', {
@@ -347,11 +345,11 @@ export default {
                 active_table: this.user.active_table,
                 wallet: this.user.wallet
               });
-              console.log('CHANGE EMAIL - response: SUCCESS');
+              //console.log('CHANGE EMAIL - response: SUCCESS');
             } else {
               this.setGlobalError(response.data['code']);
               this.setGlobalModalErrorOn();
-              console.log('CHANGE EMAIL - response: ERROR');
+              //console.log('CHANGE EMAIL - response: ERROR');
             }          
           } catch (error) {
             this.setGlobalError(0);
@@ -359,8 +357,6 @@ export default {
             console.error('Error fetching API data:', error);
           }
         }
-      } else {
-        console.log('CHANGE NICKNAME - canceled ');
       }
       this.editingEmail = false;
     },
@@ -386,28 +382,26 @@ export default {
             'token': localStorage.getItem('authToken')
           }
           const response = await axios.post(`${serverUrl}/api/change_user_phone`, dataToSend);
-          console.log('CHANGE PHONE - response: ', response.data);
+          //console.log('CHANGE PHONE - response: ', response.data);
           if (response.data['result']) {
             await this.getUserProfile();            
-            console.log('CHANGE PHONE - response: SUCCESS');
+            //console.log('CHANGE PHONE - response: SUCCESS');
           } else {
             this.setGlobalError(response.data['code']);
             this.setGlobalModalErrorOn();
-            console.log('CHANGE PHONE - response: ERROR');
+            //console.log('CHANGE PHONE - response: ERROR');
           }          
         } catch (error) {
           this.setGlobalError(0);
           this.setGlobalModalErrorOn();
           console.error('Error change phone', error);
         }
-      } else {
-        console.log('CHANGE PHONE - canceled ');
       }
       this.editingPhone = false;
     },
     async stopChooseCountry() {      
       this.editingCountry = false;
-      console.log('NEW COUNTRY IS ', this.newCountry );
+      //console.log('NEW COUNTRY IS ', this.newCountry );
       if (this.newCountry['id'] != this.user.country) {
         try {
           const dataToSend = {
@@ -416,22 +410,20 @@ export default {
             'token': localStorage.getItem('authToken')
           }
           const response = await axios.post(`${serverUrl}/api/change_user_country`, dataToSend);
-          console.log('CHANGE COUNTRY - response: ', response.data);
+          //console.log('CHANGE COUNTRY - response: ', response.data);
           if (response.data['result']) {
             await this.getUserProfile();            
-            console.log('CHANGE COUNTRY - response: SUCCESS');
+            //console.log('CHANGE COUNTRY - response: SUCCESS');
           } else {
             this.setGlobalError(response.data['code']);
             this.setGlobalModalErrorOn();
-            console.log('CHANGE COUNTRY - response: ERROR');
+            //console.log('CHANGE COUNTRY - response: ERROR');
           }          
         } catch (error) {
           this.setGlobalError(0);
           this.setGlobalModalErrorOn();
           console.error('Error change country', error);
         }
-      } else {
-        console.log('CHANGE COUNTRY - canceled ');
       }      
     },
 
@@ -457,16 +449,16 @@ export default {
             'user_id': this.userId,            
             'token': localStorage.getItem('authToken')
           }
-          console.log('getREF LINK ', dataToSend, ' USER CURRENT CODE IS ', this.user.referal_code);
+          //console.log('getREF LINK ', dataToSend, ' USER CURRENT CODE IS ', this.user.referal_code);
           const response = await axios.post(`${serverUrl}/api/create_ref_code`, dataToSend);
-          console.log(response)          
+          //console.log(response)          
           if (response.data['result']) {
             await this.getUserProfile();            
-            console.log('Creating ref code - response: SUCCESS');
+            //console.log('Creating ref code - response: SUCCESS');
           } else {
             this.setGlobalError(response.data['code']);
             this.setGlobalModalErrorOn();
-            console.log('Creating ref code - response: ERROR');
+            //console.log('Creating ref code - response: ERROR');
           }          
         } catch (error) {
           console.error('Error creating ref code', error);
@@ -474,14 +466,14 @@ export default {
       } else {
         this.setGlobalError(0);
         this.setGlobalModalErrorOn();
-        console.log('GET REFERAL RINK ');
+        //console.log('GET REFERAL RINK ');
       }
     },
 
     copyToClipboard() {
       const url = this.referalUrl;
       navigator.clipboard.writeText(url).then(() => {
-        console.log('Ссылка скопирована в буфер обмена:', url);
+        //console.log('Ссылка скопирована в буфер обмена:', url);
         this.refLinkCopied = true
         // Добавьте здесь обработку уведомления или других действий
       }).catch(err => {
@@ -501,19 +493,19 @@ export default {
             'code': this.verificationCode,
             'token': localStorage.getItem('authToken')
           }
-          console.log('SEND VERIFICATION CODE - code is ', this.verificationCode);          
+          //console.log('SEND VERIFICATION CODE - code is ', this.verificationCode);          
           const response = await axios.post(`${serverUrl}/api/user_confirm_code`, dataToSend);
-          console.log(response)          
+          //console.log(response)          
           if (response.data['result']) {
             await this.getUserProfile();
             this.setGlobalError(473);
             this.setGlobalModalErrorOn();
-            console.log('SEND VERIFICATION CODE - response: SUCCESS');
+            //console.log('SEND VERIFICATION CODE - response: SUCCESS');
           } else {
             await this.getUserProfile();
             this.setGlobalError(response.data['code']);
             this.setGlobalModalErrorOn();
-            console.log('Creating ref code - response: ERROR');
+            //console.log('Creating ref code - response: ERROR');
           }          
         } catch (error) {
           await this.getUserProfile();
@@ -534,19 +526,19 @@ export default {
             'user_id': this.userId,
             'token': localStorage.getItem('authToken')
           }
-          console.log('DEPOSIT DEMOCOIN');
+          //console.log('DEPOSIT DEMOCOIN');
           const response = await axios.post(`${serverUrl}/api/user_deposit_demo`, dataToSend);
-          console.log(response)          
+          //console.log(response)          
           if (response.data['result']) {
             await this.getUserProfile();
             this.setGlobalError(476);
             this.setGlobalModalErrorOn();
-            console.log('DEPOSIT DEMOCOIN - response: SUCCESS');
+            //console.log('DEPOSIT DEMOCOIN - response: SUCCESS');
           } else {
             await this.getUserProfile();
             this.setGlobalError(response.data['code']);
             this.setGlobalModalErrorOn();
-            console.log('DEPOSIT DEMOCOIN - response: ERROR');
+            //console.log('DEPOSIT DEMOCOIN - response: ERROR');
           }          
         } catch (error) {
           await this.getUserProfile();
@@ -558,13 +550,13 @@ export default {
     },
 
     async openDepositGold() {
-      console.log('PLAYER PROFILE - DEPOSIT GOLGCOIN')
+      //console.log('PLAYER PROFILE - DEPOSIT GOLGCOIN')
       if (!this.isAuthWeb3) {
         this.setGlobalError(477);
         this.setGlobalModalErrorOn();
       } else {
         const getTokenQuantity = await getTokenAmount();
-        console.log('OPEN DEPOSIT GOLD - ', getTokenQuantity);
+        //console.log('OPEN DEPOSIT GOLD - ', getTokenQuantity);
         if (getTokenQuantity['status']) {
           this.walletTokenAmount = getTokenQuantity['balance'];
           this.divDepositVisibleGold = true;
@@ -601,7 +593,7 @@ export default {
     
     async depositGoldcoin() {
       const depositGold = Number(this.depositValueGold);
-      console.log('DEPOSIT GOLDCOIN - ', depositGold);
+      //console.log('DEPOSIT GOLDCOIN - ', depositGold);
       if (depositGold < 1 || depositGold > this.walletTokenAmount || !Number.isInteger(depositGold)) {
         this.setGlobalError(480);
         this.setGlobalModalErrorOn();
@@ -611,7 +603,7 @@ export default {
           this.setGlobalModalErrorOn();
           const transferResult = await tokenTransfer(depositGold);
           if (transferResult['status']) {            
-            console.log('DEPOSIT GOLDCOIN - TOKEN TRANSFER result is True, Transaction data is ', transferResult['hash'], 'Transaction hash is ', transferResult['hash']['transactionHash'])
+            //console.log('DEPOSIT GOLDCOIN - TOKEN TRANSFER result is True, Transaction data is ', transferResult['hash'], 'Transaction hash is ', transferResult['hash']['transactionHash'])
             try {
               const ip_address = await get_ip_address();
               const dataToSend = {
@@ -639,7 +631,7 @@ export default {
               this.setGlobalModalErrorOn();
             }            
           } else {
-            console.log('DEPOSIT GOLDCOIN - TOKEN TRANSFER result is False');
+            //console.log('DEPOSIT GOLDCOIN - TOKEN TRANSFER result is False');
             this.closeDepositGold();
             this.setGlobalError(transferResult['error']);
             this.setGlobalModalErrorOn();  
@@ -664,7 +656,7 @@ export default {
         try {                  
           const response = await axios.get(`${serverUrl}/api/get_payment_settings`);
           if (response.data['status']) {
-            console.log('OPEN WITHDRAW GOLD', response.data.payment_settings)
+            //console.log('OPEN WITHDRAW GOLD', response.data.payment_settings)
             this.withdrawMinLimit = response.data.payment_settings['withdraw_min_limit'];
             this.withdrawValue = this.withdrawMinLimit;
             this.transferRate = response.data.payment_settings['gold_transfer_rate']/100;
@@ -704,7 +696,7 @@ export default {
 
     async withdrawGoldcoin() {
       const withdrawGold = Number(this.withdrawValue);
-      console.log('WITHDRAW GOLDCOIN - ', withdrawGold);
+      //console.log('WITHDRAW GOLDCOIN - ', withdrawGold);
       if (withdrawGold < this.withdrawMinLimit || withdrawGold > this.user.goldcoin || !Number.isInteger(withdrawGold)) {
         this.setGlobalError(480);
         this.setGlobalModalErrorOn();
@@ -712,7 +704,7 @@ export default {
         this.setGlobalError(604);
         this.setGlobalModalErrorOn();
         const walletSignature = await getSignature();
-        console.log('WITHDRAW GOLD COIN - signature: ', walletSignature);
+        //console.log('WITHDRAW GOLD COIN - signature: ', walletSignature);
         if (!walletSignature['signed']) {
           this.setGlobalError(walletSignature['error']);
           this.setGlobalModalErrorOn();
@@ -734,14 +726,14 @@ export default {
               this.closeWithdrawGold();
               this.setGlobalError(607);
               this.setGlobalModalErrorOn();
-              console.log('WITHDRAW GOLDCOIN - Response ', response);
+              //console.log('WITHDRAW GOLDCOIN - Response ', response);
             } else {
-              console.log('WITHDRAW GOLDCOIN - Response Error: ');
+              //console.log('WITHDRAW GOLDCOIN - Response Error: ');
               this.setGlobalError(response.data['error']);
               this.setGlobalModalErrorOn();  
             }
           } catch(error) {
-            console.log('WITHDRAW GOLDCOIN - CATCH - Error: ', error);
+            //console.log('WITHDRAW GOLDCOIN - CATCH - Error: ', error);
             this.setGlobalError(0);
             this.setGlobalModalErrorOn();
           }
@@ -750,26 +742,26 @@ export default {
     },
 
     async openDepositSilver() {
-      console.log('PLAYER PROFILE - DEPOSIT SILVERCOIN')
+      //console.log('PLAYER PROFILE - DEPOSIT SILVERCOIN')
       if (!this.isAuth) {
         this.setGlobalError(477);
         this.setGlobalModalErrorOn();
       } else {
         try {
           const response = await axios.get(`${serverUrl}/api/get_payment_settings_silver`);
-          console.log('OPEN DEPOSIT SILVER - GET PAYMENT SETTINGS SILVER response :', response);
+          //console.log('OPEN DEPOSIT SILVER - GET PAYMENT SETTINGS SILVER response :', response);
           if (response.data['status']) {
             const paymentData = response.data.settings;
             this.paypalClientId = paymentData['paypal_client_id']
             this.rateBNB = paymentData['silver_bnb_rate']
             this.rateUSD = paymentData['silver_usd_rate']            
           } else {
-            console.log('OPEN DEPOSIT SILVER - GET PAYMENT SETTINGS SILVER - Error: ');
+            //console.log('OPEN DEPOSIT SILVER - GET PAYMENT SETTINGS SILVER - Error: ');
             this.setGlobalError(response.data['error']);
             this.setGlobalModalErrorOn();    
           }
         } catch(error) {
-          console.log('OPEN DEPOSIT SILVER - GET PAYMENT SETTINGS SILVER - CATCH - Error: ', error);
+          //console.log('OPEN DEPOSIT SILVER - GET PAYMENT SETTINGS SILVER - CATCH - Error: ', error);
           this.setGlobalError(0);
           this.setGlobalModalErrorOn();  
         }
@@ -787,7 +779,7 @@ export default {
             this.depositValueSilverUSDT = this.userUSDT;
           }
         }
-        console.log('OPEN DEPOSIT SILVER - getToken', getTokenQuantity)
+        //console.log('OPEN DEPOSIT SILVER - getToken', getTokenQuantity)
           this.divDepositVisibleSilver = true;
           this.buttonVisibleNickname = false;
           this.buttonVisibleEmail = false;
@@ -804,7 +796,7 @@ export default {
     },
 
     async testFunction() {
-      console.log(this.user.rating);
+      //console.log(this.user.rating);
       
       try {
         const ip_address = await get_ip_address();
@@ -816,7 +808,7 @@ export default {
           'ip_address': ip_address
         }              
         const response = await axios.post(`${serverUrl}/api/user_deposit_silver_paypal`, dataToSend);
-          console.log('testFUNCTION response - ', response);          
+          //console.log('testFUNCTION response - ', response);          
           const responseData = response['data']
           if (responseData['status']) {
             this.setGlobalError(488); // Сообщение об успешном завершении транзакции
@@ -840,7 +832,7 @@ export default {
           this.setGlobalError(486);
           this.setGlobalModalErrorOn();        
         } else {
-          console.log('DEPOSIT SILVERCOIN - paypal - value: ', depositSilverPaypal);
+          //console.log('DEPOSIT SILVERCOIN - paypal - value: ', depositSilverPaypal);
         }
       } else if (this.paymentMethod === 'bnb') {
         const depositSilverBNB = Number(this.depositValueSilverBNB);
@@ -848,13 +840,13 @@ export default {
           this.setGlobalError(486);
           this.setGlobalModalErrorOn();        
         } else {
-          console.log('DEPOSIT SILVERCOIN - BNB - value: ', depositSilverBNB);
+          //console.log('DEPOSIT SILVERCOIN - BNB - value: ', depositSilverBNB);
           try {
             this.setGlobalError(481); // Сообщение о проведении транзакции
             this.setGlobalModalErrorOn();
             const transferResult = await bnbTransfer(depositSilverBNB);
             if (transferResult['status']) {            
-              console.log('DEPOSIT SILVERCOIN - TOKEN TRANSFER result is True, Transaction data is ', transferResult['hash'], 'Transaction hash is ', transferResult['hash']['transactionHash'])
+              //console.log('DEPOSIT SILVERCOIN - TOKEN TRANSFER result is True, Transaction data is ', transferResult['hash'], 'Transaction hash is ', transferResult['hash']['transactionHash'])
               try {
                 const ip_address = await get_ip_address();
                 const dataToSend = {
@@ -882,7 +874,7 @@ export default {
                 this.setGlobalModalErrorOn();
               }
             } else {
-              console.log('DEPOSIT SILVERCOIN - TOKEN TRANSFER result is False');
+              //console.log('DEPOSIT SILVERCOIN - TOKEN TRANSFER result is False');
               this.closeDepositSilver();
               this.setGlobalError(transferResult['error']);
               this.setGlobalModalErrorOn();  
@@ -900,13 +892,13 @@ export default {
           this.setGlobalError(486);
           this.setGlobalModalErrorOn();        
         } else {
-          console.log('DEPOSIT SILVERCOIN - USDT - value: ', depositSilverUSDT);
+          //console.log('DEPOSIT SILVERCOIN - USDT - value: ', depositSilverUSDT);
           try {
             this.setGlobalError(481); // Сообщение о проведении транзакции
             this.setGlobalModalErrorOn();
             const transferResult = await tokenTransferUSDT(depositSilverUSDT);
             if (transferResult['status']) {            
-              console.log('DEPOSIT SILVERCOIN - TOKEN TRANSFER result is True, Transaction data is ', transferResult['hash'], 'Transaction hash is ', transferResult['hash']['transactionHash'])              
+              //console.log('DEPOSIT SILVERCOIN - TOKEN TRANSFER result is True, Transaction data is ', transferResult['hash'], 'Transaction hash is ', transferResult['hash']['transactionHash'])              
               try {
                 const ip_address = await get_ip_address();
                 const dataToSend = {
@@ -934,7 +926,7 @@ export default {
                 this.setGlobalModalErrorOn();
               }
             } else {
-              console.log('DEPOSIT SILVERCOIN (USDT) - TOKEN TRANSFER result is False');
+              //console.log('DEPOSIT SILVERCOIN (USDT) - TOKEN TRANSFER result is False');
               this.closeDepositSilver();
               this.setGlobalError(transferResult['error']);
               this.setGlobalModalErrorOn();  
@@ -952,8 +944,6 @@ export default {
         if (depositSilverCard < this.minDepositSilver || depositSilverCard > this.maxDepositSilver || !Number.isInteger(depositSilverCard)) {
           this.setGlobalError(486);
           this.setGlobalModalErrorOn();        
-        } else {
-          console.log('DEPOSIT SILVERCOIN - card - value: ', depositSilverCard);
         }
       }
     },
@@ -973,7 +963,7 @@ export default {
     },
 
     async handlePaypalSuccess(details) {
-      console.log('PLAYER PROFILE - Paypal success:', details);
+      //console.log('PLAYER PROFILE - Paypal success:', details);
       this.setGlobalError(487);
       this.setGlobalModalErrorOn();
       try {
@@ -986,7 +976,7 @@ export default {
           'ip_address': ip_address
         }              
         const response = await axios.post(`${serverUrl}/api/user_deposit_silver_paypal`, dataToSend);
-          console.log('handle Paypal Success - ', response);          
+          //console.log('handle Paypal Success - ', response);          
           const responseData = response['data']
           if (responseData['status']) {
             await this.getUserProfile();

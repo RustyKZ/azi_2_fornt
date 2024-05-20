@@ -254,12 +254,9 @@ export default {
             wallet: this.userData.wallet
         });        
         this.$socket.emit('join_sandbox_inside', { user_id: this.userData.user_id });
-        console.log('CREATED: Image ', this.cardImg)
     },
 
     async mounted() {
-        console.log('SANDBOX TABLE MOUNTED');
-
         this.cardImg = this.$refs.card_shirt;
         this.$socket.on('update_sandbox_game', (data) => {
             this.updateTableData(data);
@@ -276,13 +273,11 @@ export default {
         this.screenHeight = window.innerHeight;
     },
 
-    beforeRouteLeave(to, from, next) {
-        console.log('Пользователь покидает страницу');
+    beforeRouteLeave(to, from, next) {        
         next();
     },
 
-    beforeUnmount () {
-        console.log('BEFORE DESTROY')
+    beforeUnmount () {        
         clearInterval(this.timer)
     },
 
@@ -293,7 +288,7 @@ export default {
             this.userId = this.$route.params.user_id;
             try {        
                 const response = await axios.get(`${serverUrl}/api/get_sandboxtable_interface`);
-                console.log('PLAYTABLE GET INTERFACE response :', response);
+                // console.log('PLAYTABLE GET INTERFACE response :', response);
                 try {
                     this.globalInterfaceData = response.data
                     if (response.data[this.getCurrentLanguage-1]['label']) {
@@ -324,8 +319,7 @@ export default {
                 } else { 
                     if (data.error !== 708) {
                         this.setGlobalError(data.error);
-                        this.setGlobalModalErrorOn();
-                        console.log('GET PRIVATE NOTICE - DATA: ', data)
+                        this.setGlobalModalErrorOn();                        
                     }
                 if (data.error === 712) {
                     this.$router.push(`/tables`);
@@ -336,8 +330,6 @@ export default {
                     this.setGlobalModalErrorOn();
                     }
                 }
-            } else {
-                console.log('GET PRIVATE NOTICE - DATA: ', data);
             }
         },
 
@@ -350,18 +342,15 @@ export default {
         },
 
         leaveTable() {        
-            this.$socket.emit('leave_sandbox', { user_id: this.userData.user_id });
-            console.log('LEAVE SANDBOX');
+            this.$socket.emit('leave_sandbox', { user_id: this.userData.user_id });            
         },
 
         closeTable() {        
-            this.$socket.emit('close_sandbox', { user_id: this.userData.user_id });
-            console.log('CLOSE SANDBOX');
+            this.$socket.emit('close_sandbox', { user_id: this.userData.user_id });            
         },
 
         updateTableData(data) {
-            if (data.status) {
-                console.log('UPDATE TABLE DATA:', data.game);
+            if (data.status) {                
                 this.game = data.game;
                 this.updateRivals();
                 this.updateMyCards();
@@ -453,8 +442,7 @@ export default {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         },
 
-        startGame() {
-            console.log('START GAME: ', this.game.max_players, this.game.drop_suit, this.game.blind_game, this.game.min_bet);
+        startGame() {            
             if (this.game.min_bet > this.game.player_balance) {
                 this.setGlobalError(724);
                 this.setGlobalModalErrorOn();
@@ -470,8 +458,7 @@ export default {
                 this.new_game.drop_suit = Number(this.game.drop_suit);
                 this.new_game.blind_game = this.game.blind_game;
                 this.new_game.user_id = this.getUser.id;
-                this.new_game.winner = this.game.winner;
-                console.log('START NEW GAME ', this.new_game);
+                this.new_game.winner = this.game.winner;                
                 this.$socket.emit('sandbox_start_game', { user_id: this.getUser.id, game: this.new_game });
             }                  
         },
@@ -595,57 +582,57 @@ export default {
                 int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
             }        
             this.$socket.emit('sandbox_user_blind_bet', { user_id: this.userData.user_id, blind_bet: int_bet });
-            console.log('BETTING BLIND BET: bet is ', int_bet)
+            // console.log('BETTING BLIND BET: bet is ', int_bet)
         },
 
         bettingBlindCheck() {
             this.$socket.emit('sandbox_user_blind_check', { user_id: this.userData.user_id});
-            console.log('BETTING BLIND CHECK')
+            // console.log('BETTING BLIND CHECK')
         },
 
         bettingRaise(raise_bet) {
-            console.log('BETTING RAISE: bet is ', raise_bet);
+            // console.log('BETTING RAISE: bet is ', raise_bet);
             let int_bet = parseInt(raise_bet, 10);
             if (isNaN(int_bet)) {
                 int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
             }
             this.$socket.emit('sandbox_user_raise', { user_id: this.userData.user_id, raise_bet: int_bet });
-            console.log('BETTING RAISE: bet is ', int_bet)
+            // console.log('BETTING RAISE: bet is ', int_bet)
         },
 
         bettingBet(bet) {
-            console.log('BETTING BET: bet is ', bet)
+            // console.log('BETTING BET: bet is ', bet)
             let int_bet = parseInt(bet, 10);
             if (isNaN(int_bet)) {
                 int_bet = 0; // Если преобразование не удалось, устанавливаем int_bet в 0
             }        
             this.$socket.emit('sandbox_user_bet', { user_id: this.userData.user_id, bet: int_bet });
-            console.log('BETTING BLIND BET: bet is ', int_bet)
+            // console.log('BETTING BLIND BET: bet is ', int_bet)
         },
 
         bettingCall() {
-            console.log('BETTING call')        
+            // console.log('BETTING call')        
             this.$socket.emit('sandbox_user_call', { user_id: this.userData.user_id, table_id: this.tableId});
         },
 
         bettingFold() {
-            console.log('BETTING FOLD')
+            // console.log('BETTING FOLD')
             this.$socket.emit('sandbox_user_fold', { user_id: this.userData.user_id, table_id: this.tableId});
         },
 
         bettingCheck() {
-            console.log('BETTING CHECK');
+            // console.log('BETTING CHECK');
             this.$socket.emit('sandbox_user_check', { user_id: this.userData.user_id, table_id: this.tableId});
         },
 
         bettingAziHalfPot() {
             this.$socket.emit('sandbox_user_azi_burst', { user_id: this.userData.user_id });
-            console.log('BETTING AZI HALF POT')
+            // console.log('BETTING AZI HALF POT')
         },
 
         bettingAziDecline() {
             this.$socket.emit('sandbox_user_azi_refuse', { user_id: this.userData.user_id });
-            console.log('BETTING AZI DECLINE')
+            // console.log('BETTING AZI DECLINE')
         },
 
         dragOver(event) {
@@ -659,13 +646,13 @@ export default {
         startDrag(event, item) {
         // Начало перетаскивания
             event.dataTransfer.setData('text/plain', JSON.stringify(item));
-            console.log('CARD DRAGGED:', item);
+            // console.log('CARD DRAGGED:', item);
             this.myCards[item.pos]['opacity'] = 'opacity: 50%';
         },
 
         cancelDrag(event) {
             event.preventDefault();
-            console.log('CANCEL DRAG')
+            // console.log('CANCEL DRAG')
             this.myCards.forEach(card => {
                 card.opacity = 'opacity: 100%';
             });
@@ -705,13 +692,13 @@ export default {
                         card_pos: item.pos,
                         card_value: item.card
                     }
-                    console.log('DROP CARD: ', droppedCard);
+                    // console.log('DROP CARD: ', droppedCard);
                     if (this.game.stage < 5) {
                         this.setGlobalError(713);
                         this.setGlobalModalErrorOn();
                     }
                     const emptyCards = this.myCards.filter(item => item.card === 0);
-                    console.log('EMPTY CARDS IS ', emptyCards.length);
+                    // console.log('EMPTY CARDS IS ', emptyCards.length);
                     if (this.game.stage === 5) {
                         if (emptyCards.length > 0) {
                             this.setGlobalError(714);
@@ -755,7 +742,7 @@ export default {
                     }                
                 }
             } catch (error) {   
-                console.log('CARD INVALID DROPPED:');
+                console.error('CARD INVALID DROPPED:', error);
             }
         },
 
@@ -769,19 +756,19 @@ export default {
                         'user_id': this.getUser.id,            
                         'token': localStorage.getItem('authToken')
                     }
-                    console.log('DEPOSIT DEMOCOIN');
+                    // console.log('DEPOSIT DEMOCOIN');
                     const response = await axios.post(`${serverUrl}/api/user_deposit_demo`, dataToSend);
-                    console.log(response)          
+                    // console.log(response)          
                     if (response.data['result']) {
                         this.$socket.emit('update_sandbox_request');
                         this.setGlobalError(476);
                         this.setGlobalModalErrorOn();
-                        console.log('DEPOSIT DEMOCOIN - response: SUCCESS');
+                        // console.log('DEPOSIT DEMOCOIN - response: SUCCESS');
                     } else {
                         this.$socket.emit('update_sandbox_request');
                         this.setGlobalError(response.data['code']);
                         this.setGlobalModalErrorOn();
-                        console.log('DEPOSIT DEMOCOIN - response: ERROR');
+                        // console.log('DEPOSIT DEMOCOIN - response: ERROR');
                     }          
                 } catch (error) {
                     this.$socket.emit('update_sandbox_request');

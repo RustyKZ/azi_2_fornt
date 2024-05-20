@@ -43,7 +43,7 @@
           this.formData = response.data;
           this.noContentMessage = this.formData[this.getCurrentLanguage-1].form.no_content;
           this.noContentHeader = this.formData[this.getCurrentLanguage-1].form.notice;
-          console.log('ABOUTPAGE - FORM: ', this.formData);
+          // console.log('ABOUTPAGE - FORM: ', this.formData);
         } catch (error) {
           console.error('ABOUTPAGE - Error fetching API Form:', error);
         }
@@ -52,14 +52,14 @@
       async getAboutpageData(languageId) {
         try {
           const response = await axios.get(`${serverUrl}/api/get_aboutpage_data/${languageId}`);
-          console.log('ABOUTPAGE - DATA: ', response);
+          // console.log('ABOUTPAGE - DATA: ', response);
           this.aboutpageData = response.data;
           if (this.aboutpageData.result) {
             this.article = this.aboutpageData.article;
-            console.log('ABOUTPAGE - DATA: ', this.aboutpageData);
+            // console.log('ABOUTPAGE - DATA: ', this.aboutpageData);
           } else {
             this.noContent = true;
-            console.log('ABOUTPAGE - DATA: ', this.aboutpageData);
+            // console.log('ABOUTPAGE - DATA: ', this.aboutpageData);
           }          
         } catch (error) {
           this.noContent = true;

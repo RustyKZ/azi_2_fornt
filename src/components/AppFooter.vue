@@ -33,10 +33,10 @@
 
       async fetchApiFooter(languageId) {
         try {
-          console.log('API Footer data')
+          // console.log('API Footer data')
           const response = await axios.get(`${serverUrl}/api/get_footer/${languageId}`);
           this.footerData = response.data;
-          console.log(response.data)
+          // console.log(response.data)
         } catch (error) {
           console.error('Error fetching API data:', error);
         }

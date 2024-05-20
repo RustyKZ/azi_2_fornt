@@ -53,10 +53,10 @@
           this.pageData = response.data;
           if (this.pageData.result) {
             this.articles = JSON.parse(this.pageData.articles);
-            console.log('TOKENPAGE - DATA: ', this.pageData);
+            // console.log('TOKENPAGE - DATA: ', this.pageData);
           } else {
             this.noContent = true;
-            console.log('TOKENPAGE - DATA: ', this.pageData);
+            // console.log('TOKENPAGE - DATA: ', this.pageData);
           }          
         } catch (error) {
           this.noContent = true;

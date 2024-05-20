@@ -38,7 +38,7 @@
           this.formData = response.data;
           this.noContentMessage = this.formData[this.getCurrentLanguage-1].form.no_content;
           this.noContentHeader = this.formData[this.getCurrentLanguage-1].form.notice;
-          console.log('GAMERULESPAGE - FORM: ', this.formData);
+          //console.log('GAMERULESPAGE - FORM: ', this.formData);
         } catch (error) {
           console.error('GAMERULESPAGE - Error fetching API Form:', error);
         }
@@ -50,10 +50,10 @@
           this.rulespageData = response.data;
           if (this.rulespageData.result) {
             this.articles = JSON.parse(this.rulespageData.articles);
-            console.log('GAMERULESPAGE - DATA: ', this.rulespageData);
+            //console.log('GAMERULESPAGE - DATA: ', this.rulespageData);
           } else {
             this.noContent = true;
-            console.log('GAMERULESPAGE - DATA: ', this.rulespageData);
+            //console.log('GAMERULESPAGE - DATA: ', this.rulespageData);
           }          
         } catch (error) {
           this.noContent = true;

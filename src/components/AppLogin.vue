@@ -65,19 +65,15 @@
           'token': localStorage.getItem('authToken')
         }
         try {
-          console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend)
+          //console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend);
           const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
           const dataResponse = response['data']
           if (dataResponse['status']) {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            //console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
             this.setGlobalError(1001);
             this.setAirdropCoins(dataResponse['airdrop']);
             this.setReferalCoins(dataResponse['referal']);
             this.setGlobalModalErrorOn();
-          } else {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
-            //this.setGlobalError(dataResponse['error']);  
-            //this.setGlobalModalErrorOn();
           }
         } catch(error) {
           console.error('Airdrop catch')
@@ -95,8 +91,8 @@
             this.modalErrorWrong();
           } else if (this.login_status.code === 200) {
             this.user = this.login_status.user_id;
-            console.log('LOGIN USER: user is ', this.user);
-            console.log('LOGIN USER: response is ', this.login_status);
+            //console.log('LOGIN USER: user is ', this.user);
+            //console.log('LOGIN USER: response is ', this.login_status);
             this.changeLanguage(this.login_status.user_language)
             if (this.login_status.logged_in) {
               await this.getAirdropCoins();
@@ -104,7 +100,7 @@
             }
           }
         } 
-        console.log(this.user_login);        
+        // console.log(this.user_login);
         
       },
       
@@ -153,12 +149,12 @@
       },
 
       async loginMetamask() {
-        console.log('LOGIN METAMASK function');
+        //console.log('LOGIN METAMASK function');
         const walletStatus = await walletConnect('', this.getCurrentLanguage);
-        console.log('LOGIN METAMASK response: ', walletStatus);
+        //console.log('LOGIN METAMASK response: ', walletStatus);
         if (walletStatus.logged_in) {
           this.user = walletStatus.user_id;
-          console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
+          //console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
           this.changeLanguage(walletStatus.user_language);
           await this.getAirdropCoins();
           this.$router.push('/');

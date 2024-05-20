@@ -52,7 +52,7 @@
     },
 
     created() {
-      console.log('APP SIGNUP isAuth is ', this.isAuth)
+      //console.log('APP SIGNUP isAuth is ', this.isAuth);
       if (this.isAuth) {
         this.$router.push('/accessdenied');
       }
@@ -100,12 +100,12 @@
       },
 
       async registerUser() {
-        console.log('Register user function', this.user_reg);
+        //console.log('Register user function', this.user_reg);
         await this.getUsers();
         if (this.allUsers) {
-          console.log('REGISTER USER: aalUsers is True')
+          console.log(' ');
         } else {
-          console.log('REGISTER USER: aalUsers is False')
+          console.log(' ');
         }
         const userExists = this.allUsers.some(user => user.nickname === this.user_reg.name);
         const emailExists = this.allUsers.some(user => user.email === this.user_reg.email);
@@ -127,7 +127,7 @@
             this.user_reg.ip_address = await get_ip_address();
             this.user_reg.language = this.getCurrentLanguage;
             const response = await axios.post(`${serverUrl}/api/user_signup`, this.user_reg);
-            console.log('Register user', response);
+            //console.log('Register user', response);
             // Обработка успешного запроса, если нужно
             if (response.data['registred']) {
               this.scrollToTop();
@@ -188,12 +188,12 @@
       },
 
       async registerMetamask() {
-        console.log('REGISTER METAMASK function', this.user_reg);
+        //console.log('REGISTER METAMASK function', this.user_reg);
         const walletStatus = await walletConnect(this.user_reg.ref_code, this.getCurrentLanguage);
-        console.log('REGISTER METAMASK response: ', walletStatus);
+        //console.log('REGISTER METAMASK response: ', walletStatus);
         if (walletStatus.logged_in) {
           this.user_id = walletStatus.user_id;
-          console.log('METAMASK CONNECT ', walletStatus.logged_in);
+          //console.log('METAMASK CONNECT ', walletStatus.logged_in);
           this.changeLanguage(walletStatus.user_language);
           await this.getAirdropCoins();
           this.$router.push('/');
@@ -213,20 +213,16 @@
           'token': localStorage.getItem('authToken')
         }
         try {
-          console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend)
+          //console.log('APP LOGIN - GET AIRDROP COINS: ', dataToSend);
           const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
           const dataResponse = response['data']
           if (dataResponse['status']) {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
+            //console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
             this.setGlobalError(1001);
             this.setAirdropCoins(dataResponse['airdrop']);
             this.setReferalCoins(dataResponse['referal']);
             this.setGlobalModalErrorOn();
-          } else {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
-            //this.setGlobalError(dataResponse['error']);  
-            //this.setGlobalModalErrorOn();
-          }
+          } 
         } catch(error) {
           console.error('Airdrop catch')
           this.setGlobalError(0);

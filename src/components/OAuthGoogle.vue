@@ -63,17 +63,13 @@
         }
         try {          
           const response = await axios.post(`${serverUrl}/api/user_get_airdrop_coins`, dataToSend);
-          console.log('APP LOGIN - GET AIRDROP COINS - response: ', response)
+          //console.log('APP LOGIN - GET AIRDROP COINS - response: ', response);
           const dataResponse = response['data']          
           if (dataResponse['status']) {            
             this.setGlobalError(1001);
             this.setAirdropCoins(dataResponse['airdrop']);
             this.setReferalCoins(dataResponse['referal']);
             this.setGlobalModalErrorOn();
-          } else {
-            console.log('APP LOGIN - GET AIRDROP COINS - response: ', response)
-            //this.setGlobalError(dataResponse['error']);  
-            //this.setGlobalModalErrorOn();
           }
         } catch(error) {
           console.error('Airdrop catch')
@@ -85,12 +81,12 @@
       async oauth_google_login(data) {
         try {
           const response = await axios.post(`${serverUrl}/api/user_login_google`, data);
-          console.log('OAuth Google login:', response);
+          //console.log('OAuth Google login:', response);
           const djangoToken = response.data['access_token'] || '';
           const language = response.data['user_language'] || 1;
           localStorage.setItem('authToken', djangoToken);          
           const logged_in = await email_check_auth();
-          console.log('OAUTH GOOGLE LOGIN: logged_in is: ', logged_in)
+          //console.log('OAUTH GOOGLE LOGIN: logged_in is: ', logged_in)
           if (logged_in['is_auth']) {
             this.user_id = logged_in['user_id']
             this.changeLanguage(language);

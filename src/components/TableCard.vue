@@ -95,7 +95,7 @@ export default {
             .then(response => {      
                 this.updateTablesHall();
                 this.leaveRoom(this.roomId);                
-                console.log('LeaveTable: ', response.data.message)
+                //console.log('LeaveTable: ', response.data.message);
                 this.$store.commit('incrementStatusHeader');
                 this.activeTable = 0;
                 //console.log('TABLE CARD: User active table = ', this.activeTable)

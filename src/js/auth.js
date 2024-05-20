@@ -6,7 +6,7 @@ import store from './storage';
 export async function email_login(login_user) {
     try {
         const response = await axios.post(`${serverUrl}/api/user_login`, login_user);
-        console.log('AUTH.JS email_login: ', response);
+        // console.log('AUTH.JS email_login: ', response);
         if (response.data['logged_in']) {
           localStorage.setItem('authToken', response.data['token']);
           store.dispatch('changeStatusLoggedIn');
@@ -36,7 +36,7 @@ export async function email_check_auth() {
     const authToken = localStorage.getItem('authToken') || '';
     const token_data = {'token': authToken};
     const response = await axios.post(`${serverUrl}/api/get_auth_status`, token_data);
-    console.log('AUTH.JS email_check_auth ', response.data);
+    //console.log('AUTH.JS email_check_auth ', response.data);
     if (response.data['is_auth']) {
       store.dispatch('changeStatusLoggedIn');
       if (response.data['is_auth_web3']) {
@@ -74,7 +74,7 @@ export async function email_logout() {
     const currentLanguage = store.getters.getCurrentLanguage || 1;
     const token_data = {'token': authToken, 'language': currentLanguage};
     const response = await axios.post(`${serverUrl}/api/user_logout`, token_data);
-    console.log('AUTH.JS email_logout ', response.data);
+    //console.log('AUTH.JS email_logout ', response.data);
     if (response.data['logged_out']) {
       store.dispatch('changeStatusLoggedOut');
       store.dispatch('changeStatusWeb3Out');

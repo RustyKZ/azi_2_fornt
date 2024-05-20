@@ -57,29 +57,24 @@
       ...mapActions(['setGlobalModalErrorOff', 'setGlobalError', 'setUser', 'setActiveTable', 'setGlobalModalErrorOn', 'setGlobalErrorCustomText']),
 
       async getPrivateMessage(data) {
-        console.log('APP: GET PRIVATE MESSAGE - ', data);
+        // console.log('APP: GET PRIVATE MESSAGE - ', data);
         if (data.status) {
             if (data.error == 712) {
                 this.setGlobalError(data.error);
-                this.setGlobalModalErrorOn();
-                console.log('GET PRIVATE MESSAGE - DATA: ', data)
+                this.setGlobalModalErrorOn();              
                 await this.getCurrentUser();
             } else if (data.error == 710) {
                 this.setGlobalError(data.error);
-                this.setGlobalModalErrorOn();
-                console.log('GET PRIVATE MESSAGE - DATA: ', data)
+                this.setGlobalModalErrorOn();                
                 await this.getCurrentUser();
             }
-        } else {
-            console.log('GET PRIVATE MESSAGE - DATA: ', data);
         }
     },
 
       async fetchApiLanguages() {
         try {
           const response = await axios.get(serverUrl+'/api/get_languages');
-          this.languagesData = response.data;
-          console.log(response.data)
+          this.languagesData = response.data;          
         } catch (error) {
           console.error('Error fetching API data:', error);
         }
@@ -87,15 +82,13 @@
       async fetchApiErrors() {
         try {
           const response = await axios.get(serverUrl+'/api/get_errors');
-          this.errorsData = response.data;
-          console.log('FETCH API ERRORS', response.data)
+          this.errorsData = response.data;          
         } catch (error) {
           console.error('Error fetching API data:', error);
         }
       },
       async getCurrentUser() {
-        const userData = await email_check_auth();
-        console.log('APP VUE - GET CURRENT USER - check auth data: ', userData)
+        const userData = await email_check_auth();        
         if (userData['is_auth']) {
           this.$store.commit('setUser', {
             id: userData['user_id'],
@@ -104,8 +97,7 @@
             active_table: userData['active_table'],
             wallet: userData['wallet']          
           });
-          this.$store.commit('setActiveTable', userData['active_table']);
-          console.log('APP VUE AFTER - GET CURRENT USER - user data: ', userData);
+          this.$store.commit('setActiveTable', userData['active_table']);          
           this.$socket.emit('update_socket_sid', { user_id: userData['user_id'] });          
         } else {
           this.$store.commit('setUser', {
@@ -119,10 +111,9 @@
         }
       },
 
-      modalErrorOn() {
-        console.log('APP: MODAL ERROR ON');
+      modalErrorOn() {        
         try {
-          console.log('APP: MODAL ERROR ON _ LANG IS ', this.errorsData[this.getCurrentLanguage - 1].label);
+          // console.log('APP: MODAL ERROR ON _ LANG IS ', this.errorsData[this.getCurrentLanguage - 1].label);
           const currentErrors = this.errorsData[this.getCurrentLanguage - 1].error;
           let currentError = currentErrors.find(error => error.number === this.globalErrorNumber);
           if (!currentError) {
@@ -131,10 +122,9 @@
           this.modalData = currentError;
           if (currentError['number'] === 1001) {
             this.createCustomText1001();
-          }
-          console.log('ERROR IS ', currentError);
+          }          
         } catch (error) {
-          console.log('APP: MODAL ERROR ON - catch _ LANG IS 0');
+          console.error('APP: MODAL ERROR ON - catch _ LANG IS 0', error);
           const currentErrors = this.errorsData[0].error;
           let currentError = currentErrors.find(error => error.number === this.globalErrorNumber);
           if (!currentError) {
@@ -143,15 +133,13 @@
           this.modalData = currentError;
           if (currentError['number'] === 1001) {
             this.createCustomText1001();
-          }
-          console.log('ERROR IS ', currentError);
+          }          
         }
 
       },
       modalErrorOff() {
         this.setGlobalModalErrorOff();
-        this.setGlobalError(0);
-        console.log('MODAL ERROR OFF');
+        this.setGlobalError(0);        
       },
 
       textNumber(number) {
@@ -192,7 +180,7 @@
           noticeCustomText += '</ul>';
         }
         this.setGlobalErrorCustomText(noticeCustomText);
-        console.log('create CUSTOM TEXT 1001', this.airdropCoins,' - ', this.referalCoins);
+        // console.log('create CUSTOM TEXT 1001', this.airdropCoins,' - ', this.referalCoins);
       }
     },
   }

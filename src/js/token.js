@@ -5,10 +5,10 @@ import { serverUrl } from '../main'
 export async function tokenTransfer(tokenValue) {
     try {
         const response = await axios.get(`${serverUrl}/api/get_token_settings`);
-        console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
+        //console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
         if (response.data['status']) {
             const tokenData = response.data.token;
-            console.log('/token.js/ async FUNCTION TOKENTRANSFER : tokendata is', tokenData, 'tokenvalue is', tokenValue);
+            // console.log('/token.js/ async FUNCTION TOKENTRANSFER : tokendata is', tokenData, 'tokenvalue is', tokenValue);
             const tokenValueBig = tokenValue.toString() + '000000000000000000';
 
             if (typeof window.ethereum !== 'undefined') {
@@ -67,7 +67,7 @@ export async function tokenTransfer(tokenValue) {
 export async function getTokenAmount() {
     try {
         const response = await axios.get(`${serverUrl}/api/get_token_settings`);
-        console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
+        // console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
         if (response.data['status']) {
             const tokenData = response.data.token;
             const tokenContractAddress = tokenData['contract'];
@@ -133,13 +133,13 @@ export async function getSignature() {
                         userAddress, // адрес для подписи
                         '' // пароль кошелька (может быть пустым, если кошелек разблокирован)
                     );
-                    console.log('Signed:',dataToSign)
+                    //console.log('Signed:',dataToSign)
                     const positiveResponse = {
                         'signed': true,
                         'userAddress': userAddress,                            
                         'signature': signature
                     };                    
-                    console.log(`WALLET SIGNATURE: `, positiveResponse);
+                    //console.log(`WALLET SIGNATURE: `, positiveResponse);
                     return positiveResponse;
                 } else {
                     // Пользователь должен переключить Metamask для использования сети BSC
@@ -218,10 +218,10 @@ export async function getWalletAmount() {
 export async function tokenTransferUSDT(tokenValue) {
     try {
         const response = await axios.get(`${serverUrl}/api/get_token_settings`);
-        console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
+        //console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
         if (response.data['status']) {
             const tokenData = response.data.token;
-            console.log('/token.js/ async FUNCTION TOKENTRANSFER : tokendata is', tokenData, 'tokenvalue is', tokenValue);
+            //console.log('/token.js/ async FUNCTION TOKENTRANSFER : tokendata is', tokenData, 'tokenvalue is', tokenValue);
             const tokenValueBig = tokenValue.toString() + '000000000000000000';
 
             if (typeof window.ethereum !== 'undefined') {
@@ -250,7 +250,7 @@ export async function tokenTransferUSDT(tokenValue) {
                         data: data,
                     });
                     // Транзакция отправлена успешно
-                    console.log(`Транзакция успешно отправлена: ${tokenValue} токенов переведены на адрес ${hostWalletAddress}`);
+                    //console.log(`Транзакция успешно отправлена: ${tokenValue} токенов переведены на адрес ${hostWalletAddress}`);
                     return {'status': true, 'hash': transactionHash};
 
                 } catch (error) {
@@ -280,10 +280,10 @@ export async function tokenTransferUSDT(tokenValue) {
 export async function bnbTransfer(bnbValue) {
     try {
         const response = await axios.get(`${serverUrl}/api/get_token_settings`);
-        console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
+        //console.log('WALLET CONNECT - GET TOKEN SETTINGS response :', response);
         if (response.data['status']) {
             const tokenData = response.data.token;
-            console.log('/token.js/ async FUNCTION BNB TRANSFER : token data is', tokenData, 'bnb value is', bnbValue);
+            //console.log('/token.js/ async FUNCTION BNB TRANSFER : token data is', tokenData, 'bnb value is', bnbValue);
             const bnbValueWei = Web3.utils.toWei(bnbValue.toString(), 'ether');
 
             if (typeof window.ethereum !== 'undefined') {
@@ -302,7 +302,7 @@ export async function bnbTransfer(bnbValue) {
                         value: bnbValueWei,
                         gas: gasValue,
                     });
-                    console.log(`bnbTRANSFER - Транзакция успешно отправлена: ${bnbValue} BNB переведены на адрес ${hostWalletAddress}`);
+                    //console.log(`bnbTRANSFER - Транзакция успешно отправлена: ${bnbValue} BNB переведены на адрес ${hostWalletAddress}`);
                     return {'status': true, 'hash': transactionHash};
 
                 } catch (error) {
