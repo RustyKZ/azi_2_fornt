@@ -154,7 +154,7 @@
         //console.log('LOGIN METAMASK response: ', walletStatus);
         if (walletStatus.logged_in) {
           this.user = walletStatus.user_id;
-          //console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
+          console.log('METAMASK CONNECT ', walletStatus.logged_in, walletStatus);
           this.changeLanguage(walletStatus.user_language);
           await this.getAirdropCoins();
           this.$router.push('/');

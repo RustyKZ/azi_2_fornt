@@ -11,16 +11,14 @@ import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 
 import io from 'socket.io-client';
 
-
 const app = createApp(App)
 
-
 export const serverUrl = 'http://localhost:8000'
-export const clientUrl = 'http://localhost:8080'
 
 let serverMailData = '@users.azi-online.com';
 let paypalClientIdData = 'ATVtjFAQiW84uJSCELJDy89J8MA-u6ldK_k9FlSqkXcuDad7DRfi3L9DBFxbL5O9RWyujt5VOnqWWZuh';
 let googleClientIdData = '746578585810-cl1hd0s6kvde9dqq4u39gbpb68mmrpib.apps.googleusercontent.com'
+let clientUrlData = 'http://localhost:8080'
 
 try {    
     const response = await axios.get(`${serverUrl}/api/get_settings`);
@@ -28,7 +26,9 @@ try {
         serverMailData = response.data['server_mail'];
         paypalClientIdData = response.data['paypal_client_id'];
         googleClientIdData = response.data['google_auth_client_id'];
-    }   
+        clientUrlData = response.data['app_client_url'];
+        console.log('data from server: ', serverMailData, paypalClientIdData, googleClientIdData, clientUrlData);
+    }    
 } catch(error) {
     console.error('MAIN JS - catch: ', error);
 }
@@ -39,6 +39,7 @@ try {
 export const serverMail = serverMailData;
 export const paypalClientId = paypalClientIdData;
 export const googleClientId = googleClientIdData;
+export const clientUrl = clientUrlData;
 
 app.use(router)
 app.use(store)
