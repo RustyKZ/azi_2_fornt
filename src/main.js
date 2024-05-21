@@ -27,7 +27,7 @@ try {
         paypalClientIdData = response.data['paypal_client_id'];
         googleClientIdData = response.data['google_auth_client_id'];
         clientUrlData = response.data['app_client_url'];
-        console.log('data from server: ', serverMailData, paypalClientIdData, googleClientIdData, clientUrlData);
+        // console.log('data from server: ', serverMailData, paypalClientIdData, googleClientIdData, clientUrlData);
     }    
 } catch(error) {
     console.error('MAIN JS - catch: ', error);
